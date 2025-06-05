@@ -1,6 +1,10 @@
 package scr;
 
 public class SimpleDriver extends Controller {
+/* La classe utilizza i dati acquisiti dai sensori della
+telemetria e restituisce le azioni da intraprendere
+per la guida dell’auto, implementando i metodi
+presenti in Controller. */
 
 	/* Gear Changing Constants */
 	final int[] gearUp = { 5000, 6000, 6000, 6500, 7000, 0 };
@@ -41,12 +45,12 @@ public class SimpleDriver extends Controller {
 
 	// current clutch
 	private float clutch = 0;
-
+/*IMPLEMENTARE */
 	public void reset() {
 		System.out.println("Restarting the race!");
 
 	}
-
+/*IMPLEMENTARE */
 	public void shutdown() {
 		System.out.println("Bye bye!");
 	}
@@ -268,7 +272,10 @@ public class SimpleDriver extends Controller {
 		}
 		return clutch;
 	}
-
+/*DA IMPLEMENTARE La classe utilizza i dati acquisiti dai sensori della
+telemetria e restituisce le azioni da intraprendere
+per la guida dell’auto, implementando i metodi
+presenti in Controller. */
 	public float[] initAngles() {
 
 		float[] angles = new float[19];
