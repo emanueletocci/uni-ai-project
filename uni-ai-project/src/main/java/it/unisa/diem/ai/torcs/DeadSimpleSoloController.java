@@ -1,4 +1,4 @@
-package scr;
+package it.unisa.diem.ai.torcs;
 
 /**
  * Created by IntelliJ IDEA. User: Administrator Date: Mar 4, 2008 Time: 4:59:21

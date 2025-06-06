@@ -1,4 +1,4 @@
-package scr;
+package it.unisa.diem.ai.torcs;
 
 public abstract class Controller {
 

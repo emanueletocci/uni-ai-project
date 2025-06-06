@@ -1,7 +1,7 @@
 /**
  * 
  */
-package scr;
+package it.unisa.diem.ai.torcs;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

@@ -1,37 +1,33 @@
-package scr;
+package it.unisa.diem.ai.torcs;
 
 public class SimpleDriver extends Controller {
-/* La classe utilizza i dati acquisiti dai sensori della
-telemetria e restituisce le azioni da intraprendere
-per la guida dell’auto, implementando i metodi
-presenti in Controller. */
 
-	/* Gear Changing Constants */
+	/* Costanti di cambio marcia */
 	final int[] gearUp = { 5000, 6000, 6000, 6500, 7000, 0 };
 	final int[] gearDown = { 0, 2500, 3000, 3000, 3500, 3500 };
 
-	/* Stuck constants */
+	/* Constanti */
 	final int stuckTime = 25;
 	final float stuckAngle = (float) 0.523598775; // PI/6
 
-	/* Accel and Brake Constants */
+	/* Costanti di accelerazione e di frenata */
 	final float maxSpeedDist = 70;
 	final float maxSpeed = 150;
 	final float sin5 = (float) 0.08716;
 	final float cos5 = (float) 0.99619;
 
-	/* Steering constants */
+	/* Costanti di sterzata */
 	final float steerLock = (float) 0.785398;
 	final float steerSensitivityOffset = (float) 80.0;
 	final float wheelSensitivityCoeff = 1;
 
-	/* ABS Filter Constants */
+	/* Costanti del filtro ABS */
 	final float wheelRadius[] = { (float) 0.3179, (float) 0.3179, (float) 0.3276, (float) 0.3276 };
 	final float absSlip = (float) 2.0;
 	final float absRange = (float) 3.0;
 	final float absMinSpeed = (float) 3.0;
 
-	/* Clutching Constants */
+	/* Costanti da stringere */
 	final float clutchMax = (float) 0.5;
 	final float clutchDelta = (float) 0.05;
 	final float clutchRange = (float) 0.82;
@@ -41,16 +37,18 @@ presenti in Controller. */
 	final float clutchMaxModifier = (float) 1.3;
 	final float clutchMaxTime = (float) 1.5;
 
+
+
 	private int stuck = 0;
 
 	// current clutch
 	private float clutch = 0;
-/*IMPLEMENTARE */
+
 	public void reset() {
 		System.out.println("Restarting the race!");
 
 	}
-/*IMPLEMENTARE */
+
 	public void shutdown() {
 		System.out.println("Bye bye!");
 	}
@@ -59,83 +57,96 @@ presenti in Controller. */
 		int gear = sensors.getGear();
 		double rpm = sensors.getRPM();
 
-		// if gear is 0 (N) or -1 (R) just return 1
+		// Se la marcia è 0 (N) o -1 (R) restituisce semplicemente 1
 		if (gear < 1)
 			return 1;
-		// check if the RPM value of car is greater than the one suggested
-		// to shift up the gear from the current one
+
+		// Se il valore di RPM dell'auto è maggiore di quello suggerito
+		// sale di marcia rispetto a quella attuale
 		if (gear < 6 && rpm >= gearUp[gear - 1])
 			return gear + 1;
 		else
-		// check if the RPM value of car is lower than the one suggested
-		// to shift down the gear from the current one
+
+		// Se il valore di RPM dell'auto è inferiore a quello suggerito
+		// scala la marcia rispetto a quella attuale
 		if (gear > 1 && rpm <= gearDown[gear - 1])
 			return gear - 1;
-		else // otherwhise keep current gear
+		else // Altrimenti mantenere l'attuale
 			return gear;
 	}
 
 	private float getSteer(SensorModel sensors) {
-		// steering angle is compute by correcting the actual car angle w.r.t. to track
-		// axis [sensors.getAngle()] and to adjust car position w.r.t to middle of track
-		// [sensors.getTrackPos()*0.5]
+		/** L'angolo di sterzata viene calcolato correggendo l'angolo effettivo della vettura
+		 * rispetto all'asse della pista [sensors.getAngle()] e regolando la posizione della vettura
+		 * rispetto al centro della pista [sensors.getTrackPos()*0,5].
+		 */
 		float targetAngle = (float) (sensors.getAngleToTrackAxis() - sensors.getTrackPosition() * 0.5);
-		// at high speed reduce the steering command to avoid loosing the control
+		// ad alta velocità ridurre il comando di sterzata per evitare di perdere il controllo
 		if (sensors.getSpeed() > steerSensitivityOffset)
 			return (float) (targetAngle
 					/ (steerLock * (sensors.getSpeed() - steerSensitivityOffset) * wheelSensitivityCoeff));
 		else
 			return (targetAngle) / steerLock;
-
 	}
 
 	private float getAccel(SensorModel sensors) {
-		// checks if car is out of track
-		if (sensors.getTrackPosition() < 1 && sensors.getTrackPosition() > -1) {
-			// reading of sensor at +5 degree w.r.t. car axis
+		// controlla se l'auto è fuori dalla carreggiata
+		if (sensors.getTrackPosition() > -1 && sensors.getTrackPosition() < 1) {
+			// lettura del sensore a +5 gradi rispetto all'asse dell'automobile
 			float rxSensor = (float) sensors.getTrackEdgeSensors()[10];
-			// reading of sensor parallel to car axis
+			// lettura del sensore parallelo all'asse della vettura
 			float sensorsensor = (float) sensors.getTrackEdgeSensors()[9];
-			// reading of sensor at -5 degree w.r.t. car axis
+			// lettura del sensore a -5 gradi rispetto all'asse dell'automobile
 			float sxSensor = (float) sensors.getTrackEdgeSensors()[8];
 
 			float targetSpeed;
 
-			// track is straight and enough far from a turn so goes to max speed
+			// Se la pista è rettilinea e abbastanza lontana da una curva, quindi va alla massima velocità
 			if (sensorsensor > maxSpeedDist || (sensorsensor >= rxSensor && sensorsensor >= sxSensor))
 				targetSpeed = maxSpeed;
 			else {
-				// approaching a turn on right
+				// In prossimità di una curva a destra
 				if (rxSensor > sxSensor) {
-					// computing approximately the "angle" of turn
+
+					// Calcolo dell'"angolo" di sterzata
 					float h = sensorsensor * sin5;
 					float b = rxSensor - sensorsensor * cos5;
 					float sinAngle = b * b / (h * h + b * b);
-					// estimate the target speed depending on turn and on how close it is
+
+					// Set della velocità in base alla curva
 					targetSpeed = maxSpeed * (sensorsensor * sinAngle / maxSpeedDist);
 				}
-				// approaching a turn on left
+				// In prossimità di una curva a sinistra
 				else {
-					// computing approximately the "angle" of turn
+					// Calcolo dell'"angolo" di sterzata
 					float h = sensorsensor * sin5;
 					float b = sxSensor - sensorsensor * cos5;
 					float sinAngle = b * b / (h * h + b * b);
-					// estimate the target speed depending on turn and on how close it is
+
+					// eSet della velocità in base alla curva
 					targetSpeed = maxSpeed * (sensorsensor * sinAngle / maxSpeedDist);
 				}
-
 			}
 
-			// accel/brake command is exponentially scaled w.r.t. the difference between
-			// target speed and current one
+			/**
+			 * Il comando di accelerazione/frenata viene scalato in modo esponenziale rispetto
+			 * alla differenza tra velocità target e quella attuale
+			 */
 			return (float) (2 / (1 + Math.exp(sensors.getSpeed() - targetSpeed)) - 1);
 		} else
-			return (float) 0.3; // when out of track returns a moderate acceleration command
-
+			// Quando si esce dalla carreggiata restituisce un comando di accelerazione moderata
+			return (float) 0.3;
 	}
 
 	public Action control(SensorModel sensors) {
-		// check if car is currently stuck
+		// Controlla se l'auto è attualmente bloccata
+		/**
+			Se l'auto ha un angolo, rispetto alla traccia, superiore a 30°
+			incrementa "stuck" che è una variabile che indica per quanti cicli l'auto è in
+			condizione di difficoltà.
+			Quando l'angolo si riduce, "stuck" viene riportata a 0 per indicare che l'auto è
+			uscita dalla situaizone di difficoltà
+		 **/
 		if (Math.abs(sensors.getAngleToTrackAxis()) > stuckAngle) {
 			// update stuck counter
 			stuck++;
@@ -144,24 +155,29 @@ presenti in Controller. */
 			stuck = 0;
 		}
 
-		// after car is stuck for a while apply recovering policy
-		if (stuck > stuckTime) {
-			/*
-			 * set gear and sterring command assuming car is pointing in a direction out of
-			 * track
-			 */
+		// Applicare la polizza di recupero o meno in base al tempo trascorso
+		/**
+		Se "stuck" è superiore a 25 (stuckTime) allora procedi a entrare in situaizone di RECOVERY
+		per far fronte alla situazione di difficoltà
+		 **/
 
-			// to bring car parallel to track axis
+		if (stuck > stuckTime) { //Auto Bloccata
+			/**
+			 * Impostare la marcia e il comando di sterzata supponendo che l'auto stia puntando
+			 * in una direzione al di fuori di pista
+			 **/
+
+			// Per portare la macchina parallela all'asse TrackPos
 			float steer = (float) (-sensors.getAngleToTrackAxis() / steerLock);
-			int gear = -1; // gear R
+			int gear = -1; // Retromarcia
 
-			// if car is pointing in the correct direction revert gear and steer
+			// Se l'auto è orientata nella direzione corretta invertire la marcia e sterzare
 			if (sensors.getAngleToTrackAxis() * sensors.getTrackPosition() > 0) {
 				gear = 1;
 				steer = -steer;
 			}
 			clutch = clutching(sensors, clutch);
-			// build a CarControl variable and return it
+			// Costruire una variabile CarControl e restituirla
 			Action action = new Action();
 			action.gear = gear;
 			action.steering = steer;
@@ -171,35 +187,37 @@ presenti in Controller. */
 			return action;
 		}
 
-		else // car is not stuck
+		else //Auto non Bloccata
 		{
-			// compute accel/brake command
+			// Calcolo del comando di accelerazione/frenata
 			float accel_and_brake = getAccel(sensors);
-			// compute gear
+
+			// Calcolare marcia da utilizzare
 			int gear = getGear(sensors);
-			// compute steering
+
+			// Calcolo angolo di sterzata
 			float steer = getSteer(sensors);
 
-			// normalize steering
+			// Normalizzare lo sterzo
 			if (steer < -1)
 				steer = -1;
 			if (steer > 1)
 				steer = 1;
 
-			// set accel and brake from the joint accel/brake command
+			// Impostare accelerazione e frenata dal comando congiunto accelerazione/freno
 			float accel, brake;
 			if (accel_and_brake > 0) {
 				accel = accel_and_brake;
 				brake = 0;
 			} else {
 				accel = 0;
-				// apply ABS to brake
+
+				// Applicare l'ABS al freno
 				brake = filterABS(sensors, -accel_and_brake);
 			}
-
 			clutch = clutching(sensors, clutch);
 
-			// build a CarControl variable and return it
+			// Costruire una variabile CarControl e restituirla
 			Action action = new Action();
 			action.gear = gear;
 			action.steering = steer;
@@ -211,26 +229,28 @@ presenti in Controller. */
 	}
 
 	private float filterABS(SensorModel sensors, float brake) {
-		// convert speed to m/s
+		// Converte la velocità in m/s
 		float speed = (float) (sensors.getSpeed() / 3.6);
-		// when spedd lower than min speed for abs do nothing
+
+		// Quando la velocità è inferiore alla velocità minima per l'abs non interviene in caso di frenata
 		if (speed < absMinSpeed)
 			return brake;
 
-		// compute the speed of wheels in m/s
+		// Calcola la velocità delle ruote in m/s
 		float slip = 0.0f;
 		for (int i = 0; i < 4; i++) {
 			slip += sensors.getWheelSpinVelocity()[i] * wheelRadius[i];
 		}
-		// slip is the difference between actual speed of car and average speed of
-		// wheels
+
+		// Lo slittamento è la differenza tra la velocità effettiva dell'auto e la velocità media delle ruote
 		slip = speed - slip / 4.0f;
-		// when slip too high applu ABS
+
+		// Quando lo slittamento è troppo elevato, si applica l'ABS
 		if (slip > absSlip) {
 			brake = brake - (slip - absSlip) / absRange;
 		}
 
-		// check brake is not negative, otherwise set it to zero
+		// Controlla che il freno non sia negativo, altrimenti lo imposta a zero
 		if (brake < 0)
 			return 0;
 		else
@@ -241,41 +261,38 @@ presenti in Controller. */
 
 		float maxClutch = clutchMax;
 
-		// Check if the current situation is the race start
+		// Controlla se la situazione attuale è l'inizio della gara
 		if (sensors.getCurrentLapTime() < clutchDeltaTime && getStage() == Stage.RACE
 				&& sensors.getDistanceRaced() < clutchDeltaRaced)
 			clutch = maxClutch;
 
-		// Adjust the current value of the clutch
+		// Regolare il valore attuale della frizione
 		if (clutch > 0) {
 			double delta = clutchDelta;
 			if (sensors.getGear() < 2) {
-				// Apply a stronger clutch output when the gear is one and the race is just
-				// started
+
+				// Applicare un'uscita più forte della frizione quando la marcia è una e la corsa è appena iniziata.
 				delta /= 2;
 				maxClutch *= clutchMaxModifier;
 				if (sensors.getCurrentLapTime() < clutchMaxTime)
 					clutch = maxClutch;
 			}
 
-			// check clutch is not bigger than maximum values
+			// Controllare che la frizione non sia più grande dei valori massimi
 			clutch = Math.min(maxClutch, clutch);
 
-			// if clutch is not at max value decrease it quite quickly
+			// Se la frizione non è al massimo valore, diminuisce abbastanza rapidamente
 			if (clutch != maxClutch) {
 				clutch -= delta;
 				clutch = Math.max((float) 0.0, clutch);
 			}
-			// if clutch is at max value decrease it very slowly
+			// Se la frizione è al valore massimo, diminuirla molto lentamente.
 			else
 				clutch -= clutchDec;
 		}
 		return clutch;
 	}
-/*DA IMPLEMENTARE La classe utilizza i dati acquisiti dai sensori della
-telemetria e restituisce le azioni da intraprendere
-per la guida dell’auto, implementando i metodi
-presenti in Controller. */
+
 	public float[] initAngles() {
 
 		float[] angles = new float[19];
