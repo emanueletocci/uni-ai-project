@@ -1,4 +1,7 @@
-package it.unisa.diem.ai.torcs;
+package it.unisa.diem.ai.torcs.controllers;
+
+import it.unisa.diem.ai.torcs.actions.Action;
+import it.unisa.diem.ai.torcs.sensors.SensorModel;
 
 public abstract class Controller {
 
@@ -6,21 +9,17 @@ public abstract class Controller {
 
 		WARMUP, QUALIFYING, RACE, UNKNOWN;
 
-		static Stage fromInt(int value) {
-			switch (value) {
-			case 0:
-				return WARMUP;
-			case 1:
-				return QUALIFYING;
-			case 2:
-				return RACE;
-			default:
-				return UNKNOWN;
-			}
+		public static Stage fromInt(int value) {
+            return switch (value) {
+                case 0 -> WARMUP;
+                case 1 -> QUALIFYING;
+                case 2 -> RACE;
+                default -> UNKNOWN;
+            };
 		}
-	};
+	}
 
-	private Stage stage;
+    private Stage stage;
 	private String trackName;
 
 	public float[] initAngles() {

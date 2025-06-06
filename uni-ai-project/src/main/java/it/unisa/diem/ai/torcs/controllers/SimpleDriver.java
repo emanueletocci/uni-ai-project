@@ -1,4 +1,7 @@
-package it.unisa.diem.ai.torcs;
+package it.unisa.diem.ai.torcs.controllers;
+
+import it.unisa.diem.ai.torcs.actions.Action;
+import it.unisa.diem.ai.torcs.sensors.SensorModel;
 
 public class SimpleDriver extends Controller {
 
@@ -22,7 +25,7 @@ public class SimpleDriver extends Controller {
 	final float wheelSensitivityCoeff = 1;
 
 	/* Costanti del filtro ABS */
-	final float wheelRadius[] = { (float) 0.3179, (float) 0.3179, (float) 0.3276, (float) 0.3276 };
+	final float[] wheelRadius = { (float) 0.3179, (float) 0.3179, (float) 0.3276, (float) 0.3276 };
 	final float absSlip = (float) 2.0;
 	final float absRange = (float) 3.0;
 	final float absMinSpeed = (float) 3.0;
@@ -239,7 +242,7 @@ public class SimpleDriver extends Controller {
 		// Calcola la velocità delle ruote in m/s
 		float slip = 0.0f;
 		for (int i = 0; i < 4; i++) {
-			slip += sensors.getWheelSpinVelocity()[i] * wheelRadius[i];
+			slip += (float) (sensors.getWheelSpinVelocity()[i] * wheelRadius[i]);
 		}
 
 		// Lo slittamento è la differenza tra la velocità effettiva dell'auto e la velocità media delle ruote

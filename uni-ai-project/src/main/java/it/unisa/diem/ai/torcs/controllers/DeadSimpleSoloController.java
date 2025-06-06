@@ -1,4 +1,7 @@
-package it.unisa.diem.ai.torcs;
+package it.unisa.diem.ai.torcs.controllers;
+
+import it.unisa.diem.ai.torcs.actions.Action;
+import it.unisa.diem.ai.torcs.sensors.SensorModel;
 
 /**
  * Created by IntelliJ IDEA. User: Administrator Date: Mar 4, 2008 Time: 4:59:21

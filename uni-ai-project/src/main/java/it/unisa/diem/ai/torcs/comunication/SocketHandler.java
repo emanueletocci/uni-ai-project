@@ -1,7 +1,7 @@
 /**
  * 
  */
-package it.unisa.diem.ai.torcs;
+package it.unisa.diem.ai.torcs.comunication;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
