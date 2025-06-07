@@ -2,8 +2,10 @@ package it.unisa.diem.ai.torcs.controllers;
 
 import it.unisa.diem.ai.torcs.actions.Action;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
+import it.unisa.diem.ai.torcs.utilities.DataLogger;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -51,7 +53,10 @@ public class SimpleDriver extends Controller {
 	// current clutch
 	private float clutch = 0;
 
+	private DataLogger logger;
+
 	public SimpleDriver(){
+		logger = new DataLogger("data/dataset.csv");
 		System.out.println("Simple Driver initialized!");
 	}
 	public void reset() {
@@ -197,11 +202,16 @@ public class SimpleDriver extends Controller {
 			action.clutch = clutch;
 
 			// Creazione dataset
-			try{
-				exportToCSV(sensors);
-			} catch (IOException e) {
-				e.printStackTrace();
+			if (logger != null) {
+				logger.log(
+						sensors.getSpeed(),
+						sensors.getTrackPosition(),
+						sensors.getTrackEdgeSensors(),
+						sensors.getAngleToTrackAxis(),
+						action.gear // oppure altra label
+				);
 			}
+
 
 			return action;
 		}
@@ -244,13 +254,16 @@ public class SimpleDriver extends Controller {
 			action.clutch = clutch;
 
 			// Creazione dataset
-			try{
-				exportToCSV(sensors);
-			} catch (IOException e) {
-				e.printStackTrace();
+			if (logger != null) {
+				logger.log(
+						sensors.getSpeed(),
+						sensors.getTrackPosition(),
+						sensors.getTrackEdgeSensors(),
+						sensors.getAngleToTrackAxis(),
+						action.gear // oppure altra label
+				);
 			}
-
-			return action;
+            return action;
 
 		}
 	}
@@ -339,28 +352,5 @@ public class SimpleDriver extends Controller {
 		}
 		angles[9] = 0;
 		return angles;
-	}
-
-	/*
-	 * Metodo aggiunto:
-	 * Utile ad esportare i dati caratterizzanti la vettura
-	 * su un file CSV che farà da Data-set.
-	 */
-	private void exportToCSV(SensorModel sensors) throws IOException {
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter("data/dataset.csv", true))) {
-			bw.append(sensors.getTrackPosition() + ";");
-			bw.append(sensors.getTrackEdgeSensors()[4] + ";");
-			bw.append(sensors.getTrackEdgeSensors()[6] + ";");
-			bw.append(sensors.getTrackEdgeSensors()[8] + ";");
-			bw.append(sensors.getTrackEdgeSensors()[9] + ";");
-			bw.append(sensors.getTrackEdgeSensors()[10] + ";");
-			bw.append(sensors.getTrackEdgeSensors()[12] + ";");
-			bw.append(sensors.getTrackEdgeSensors()[14] + ";");
-			bw.append(sensors.getAngleToTrackAxis() + ";");
-			bw.append('\n');
-		} catch (IOException ex) {
-			Logger.getLogger(SimpleDriver.class.getName()).log(Level.SEVERE, null, ex);
-		}
-
 	}
 }
