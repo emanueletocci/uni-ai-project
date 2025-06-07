@@ -1,5 +1,7 @@
 package it.unisa.diem.ai.torcs.classifier;
 
+import it.unisa.diem.ai.torcs.Sample;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;

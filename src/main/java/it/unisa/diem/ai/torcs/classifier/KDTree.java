@@ -1,5 +1,7 @@
 package it.unisa.diem.ai.torcs.classifier;
 
+import it.unisa.diem.ai.torcs.Sample;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
