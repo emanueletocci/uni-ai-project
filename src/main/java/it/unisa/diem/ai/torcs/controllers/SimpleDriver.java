@@ -2,10 +2,14 @@ package it.unisa.diem.ai.torcs.controllers;
 
 import it.unisa.diem.ai.torcs.actions.Action;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
-import it.unisa.diem.ai.torcs.utilities.DataLogger;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class SimpleDriver extends Controller {
-	private DataLogger logger;
 
 	/* Costanti di cambio marcia */
 	final int[] gearUp = { 5000, 6000, 6000, 6500, 7000, 0 };
@@ -48,11 +52,6 @@ public class SimpleDriver extends Controller {
 	private float clutch = 0;
 
 	public SimpleDriver(){
-		try {
-			logger = new DataLogger("dataset.csv");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 	public void reset() {
 		System.out.println("Restarting the race!");
@@ -60,9 +59,6 @@ public class SimpleDriver extends Controller {
 	}
 
 	public void shutdown() {
-		if (logger != null) {
-			logger.close();
-		}
 		System.out.println("Bye bye!");
 
 	}
@@ -199,22 +195,17 @@ public class SimpleDriver extends Controller {
 			action.brake = 0;
 			action.clutch = clutch;
 
-			// Logging dei dati
-			if (logger != null) {
-				logger.log(
-						sensors.getSpeed(),
-						sensors.getTrackPosition(),
-						sensors.getTrackEdgeSensors(),
-						sensors.getAngleToTrackAxis(),
-						action.gear // o altra label
-				);
+			// Creazione dataset
+			try{
+				exportToCSV(sensors);
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 
 			return action;
 		}
-
-		else //Auto non Bloccata
-		{
+		//Auto non Bloccata
+		else {
 			// Calcolo del comando di accelerazione/frenata
 			float accel_and_brake = getAccel(sensors);
 
@@ -250,7 +241,16 @@ public class SimpleDriver extends Controller {
 			action.accelerate = accel;
 			action.brake = brake;
 			action.clutch = clutch;
+
+			// Creazione dataset
+			try{
+				exportToCSV(sensors);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
 			return action;
+
 		}
 	}
 
@@ -338,5 +338,28 @@ public class SimpleDriver extends Controller {
 		}
 		angles[9] = 0;
 		return angles;
+	}
+
+	/*
+	 * Metodo aggiunto:
+	 * Utile ad esportare i dati caratterizzanti la vettura
+	 * su un file CSV che farà da Data-set.
+	 */
+	private void exportToCSV(SensorModel sensors) throws IOException {
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter("data/dataset.csv", true))) {
+			bw.append(sensors.getTrackPosition() + ";");
+			bw.append(sensors.getTrackEdgeSensors()[4] + ";");
+			bw.append(sensors.getTrackEdgeSensors()[6] + ";");
+			bw.append(sensors.getTrackEdgeSensors()[8] + ";");
+			bw.append(sensors.getTrackEdgeSensors()[9] + ";");
+			bw.append(sensors.getTrackEdgeSensors()[10] + ";");
+			bw.append(sensors.getTrackEdgeSensors()[12] + ";");
+			bw.append(sensors.getTrackEdgeSensors()[14] + ";");
+			bw.append(sensors.getAngleToTrackAxis() + ";");
+			bw.append('\n');
+		} catch (IOException ex) {
+			Logger.getLogger(SimpleDriver.class.getName()).log(Level.SEVERE, null, ex);
+		}
+
 	}
 }
