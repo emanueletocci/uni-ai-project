@@ -6,4 +6,4 @@
 cd "$(dirname "$0")"
 
 # Esegui il programma Java
-java -cp classes it.unisa.diem.ai.torcs.Client it.unisa.diem.ai.torcs.SimpleDriver host:localhost port:3001 verbose:on
+java -cp classes it.unisa.diem.ai.torcs.comunication.Client it.unisa.diem.ai.torcs.controllers.SimpleDriver host:localhost port:3001 verbose:on

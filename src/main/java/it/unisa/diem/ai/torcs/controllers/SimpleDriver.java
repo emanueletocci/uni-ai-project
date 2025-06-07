@@ -52,6 +52,7 @@ public class SimpleDriver extends Controller {
 	private float clutch = 0;
 
 	public SimpleDriver(){
+		System.out.println("Simple Driver initialized!");
 	}
 	public void reset() {
 		System.out.println("Restarting the race!");
