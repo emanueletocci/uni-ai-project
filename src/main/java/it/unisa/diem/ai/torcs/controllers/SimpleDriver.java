@@ -2,8 +2,10 @@ package it.unisa.diem.ai.torcs.controllers;
 
 import it.unisa.diem.ai.torcs.actions.Action;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
+import it.unisa.diem.ai.torcs.utilities.DataLogger;
 
 public class SimpleDriver extends Controller {
+	private DataLogger logger;
 
 	/* Costanti di cambio marcia */
 	final int[] gearUp = { 5000, 6000, 6000, 6500, 7000, 0 };
@@ -40,20 +42,29 @@ public class SimpleDriver extends Controller {
 	final float clutchMaxModifier = (float) 1.3;
 	final float clutchMaxTime = (float) 1.5;
 
-
-
 	private int stuck = 0;
 
 	// current clutch
 	private float clutch = 0;
 
+	public SimpleDriver(){
+		try {
+			logger = new DataLogger("dataset.csv");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	public void reset() {
 		System.out.println("Restarting the race!");
 
 	}
 
 	public void shutdown() {
+		if (logger != null) {
+			logger.close();
+		}
 		System.out.println("Bye bye!");
+
 	}
 
 	private int getGear(SensorModel sensors) {
@@ -187,6 +198,18 @@ public class SimpleDriver extends Controller {
 			action.accelerate = 1.0;
 			action.brake = 0;
 			action.clutch = clutch;
+
+			// Logging dei dati
+			if (logger != null) {
+				logger.log(
+						sensors.getSpeed(),
+						sensors.getTrackPosition(),
+						sensors.getTrackEdgeSensors(),
+						sensors.getAngleToTrackAxis(),
+						action.gear // o altra label
+				);
+			}
+
 			return action;
 		}
 
