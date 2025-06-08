@@ -1,17 +1,9 @@
 package it.unisa.diem.ai.torcs.controllers;
 
-import it.unisa.diem.ai.torcs.Sample;
 import it.unisa.diem.ai.torcs.actions.Action;
 import it.unisa.diem.ai.torcs.classifier.NearestNeighbor;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
 import it.unisa.diem.ai.torcs.utilities.DataLogger;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class SimpleDriver extends Controller {
 
@@ -57,10 +49,13 @@ public class SimpleDriver extends Controller {
 
     private DataLogger logger;
 
+    private AutonomousDriverUtility autonomousDriver;
     private NearestNeighbor knn;
+
 
     public SimpleDriver() {
         knn = new NearestNeighbor("data/dataset.csv");
+        autonomousDriver = new AutonomousDriverUtility("data/dataset.csv");
         logger = new DataLogger("data/dataset.csv");
         System.out.println("Simple Driver initialized!");
     }
@@ -207,76 +202,12 @@ public class SimpleDriver extends Controller {
             action.brake = 0;
             action.clutch = clutch;
 
-            // Creazione dataset
-            if (logger != null) {
-                logger.log(
-                        sensors.getSpeed(),
-                        sensors.getTrackPosition(),
-                        sensors.getTrackEdgeSensors(),
-                        sensors.getAngleToTrackAxis(),
-                        action.gear // oppure altra label
-                );
-            }
-
-
             return action;
         }
         //Auto non Bloccata, guida tramite classificazione KNN
         else {
-            // 1. Estrai le feature dai sensori (come nel dataset)
-            double[] features = {
-                    sensors.getSpeed(),
-                    sensors.getTrackPosition(),
-                    sensors.getTrackEdgeSensors()[4],
-                    sensors.getTrackEdgeSensors()[6],
-                    sensors.getTrackEdgeSensors()[8],
-                    sensors.getTrackEdgeSensors()[9],
-                    sensors.getTrackEdgeSensors()[10],
-                    sensors.getTrackEdgeSensors()[12],
-                    sensors.getTrackEdgeSensors()[14],
-                    sensors.getAngleToTrackAxis()
-            };
-
-            // 2. Predici la classe con KNN
-            int predictedClass = knn.classify(new Sample(features), 3);
-            System.out.println("Classe predetta: " + predictedClass);
-
-            // 3. Mappa la classe predetta sui comandi
-            Action action = new Action();
-            switch (predictedClass) {
-                case 0: // Accelerazione
-                    action.accelerate = 1.0;
-                    action.steering = 0;
-                    break;
-                case 1: // Frenata
-                    action.brake = 1.0;
-                    action.steering = 0;
-                    break;
-                case 2: // Sterzo a sinistra
-                    action.accelerate = 0.5;
-                    action.steering = -1.0;
-                    break;
-                case 3: // Sterzo a destra
-                    action.accelerate = 0.5;
-                    action.steering = 1.0;
-                    break;
-                default: // Default sicurezza
-                    action.accelerate = 0.1;
-                    action.steering = 0;
-            }
-
-            // 4. Logging (opzionale)
-            if (logger != null) {
-                logger.log(
-                        sensors.getSpeed(),
-                        sensors.getTrackPosition(),
-                        sensors.getTrackEdgeSensors(),
-                        sensors.getAngleToTrackAxis(),
-                        predictedClass // Usa la classe predetta invece di action.gear
-                );
-            }
-
-            return action;
+            int gear = getGear(sensors);
+            return autonomousDriver.decide(sensors, gear);
         }
     }
 

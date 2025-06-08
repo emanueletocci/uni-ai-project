@@ -18,6 +18,8 @@ public class NearestNeighbor {
     public NearestNeighbor(String filename) {
         this.trainingData = new ArrayList<>();
         this.kdtree = null;
+        this.firstLineOfTheFile = "speed;trackPosition;trackEdgeSensor4;trackEdgeSensor6;trackEdgeSensor8;trackEdgeSensor9;"
+                + "trackEdgeSensor10;trackEdgeSensor12;trackEdgeSensor14;angleToTrackAxis;classLabel";
         this.classCounts = new int[10]; // Adjust if you have a different number of classes
         this.readPointsFromCSV(filename);
     }
@@ -28,11 +30,15 @@ public class NearestNeighbor {
             String line;
             boolean firstLine = true;
             while ((line = reader.readLine()) != null) {
-                if (firstLine) { // Salta l'header
-                    firstLine = false;
-                    continue;
+                if (line.startsWith(firstLineOfTheFile)) {
+                    continue; // Skip header
                 }
-                trainingData.add(new Sample(line));
+                try {
+                    if (line.trim().isEmpty()) continue; // Salta righe vuote
+                    trainingData.add(new Sample(line));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             reader.close();
         } catch (IOException e) {
@@ -40,7 +46,6 @@ public class NearestNeighbor {
         }
         this.kdtree = new KDTree(trainingData);
     }
-
 
     public List<Sample> findKNearestNeighbors(Sample testPoint, int k) {
         return kdtree.kNearestNeighbors(testPoint, k);
