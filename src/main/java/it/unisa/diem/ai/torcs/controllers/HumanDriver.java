@@ -84,7 +84,7 @@ public class HumanDriver extends Controller {
             } else { // In movimento: frena
                 action.gear = Math.max(1, gear); // Mantieni marcia avanti
                 action.accelerate = 0.0f;
-                action.brake = 1.0f;
+                action.brake = filterABS(sensors, 1.0f);
             }
         } else {
             action.brake = 0.0f;
@@ -114,26 +114,32 @@ public class HumanDriver extends Controller {
 
         // 6. Logging (opzionale, puoi scegliere se usare classLabel)
         fullLogger.logFull(track, trackPos, angle, speedX, rpm, action.gear,
-                action.accelerate, action.brake, action.steering);
+                action.accelerate, action.brake, action.steering, classLabel);
 
         lightLogger.logLight(track, trackPos, angle, speedX,
-                action.accelerate, action.brake, action.steering);
+                action.accelerate, action.brake, action.steering, classLabel);
 
         return action;
     }
 
 
+    // Le label sono essenziali per il calssificatore. Sono sostanzialmente le features quindi dobbiamo decidere quali usare
     private int calculateClassLabel(Action action) {
-        int label = 0;
-        // Codifica one-hot: [avanti, sinistra, destra, retro, freno]
-        if (action.accelerate > 0) label |= 1 << 0;
-        if (action.steering > 0.1f) label |= 1 << 1;
-        if (action.steering < -0.1f) label |= 1 << 2;
-        if (action.gear == -1) label |= 1 << 3;
-        if (action.brake > 0) label |= 1 << 4;
-        return label;
-    }
+        boolean avanti = action.accelerate > 0 && action.gear > 0 && action.brake == 0;
+        boolean retro = action.accelerate > 0 && action.gear == -1 && action.brake == 0;
+        boolean sinistra = action.steering > 0.1f;
+        boolean destra = action.steering < -0.1f;
+        boolean freno = action.brake > 0;
 
+        if (avanti) return 1;
+        if (avanti && sinistra) return 2;
+        if (avanti && destra) return 3;
+        if (freno) return 4;
+        if (retro) return 5;
+        if (retro && sinistra) return 6;
+        if (retro && destra) return 7;
+        return 0; // nessuna azione
+    }
 
     // Metodo per il filtro ABS [Aggiungere nella classe]
     private float filterABS(SensorModel sensors, float brake) {
