@@ -19,7 +19,6 @@ public class NearestNeighbor {
         this.trainingData = new ArrayList<>();
         this.kdtree = null;
         this.classCounts = new int[10]; // Adjust if you have a different number of classes
-        this.firstLineOfTheFile = "x,y,z,w,v,class";
         this.readPointsFromCSV(filename);
     }
 
@@ -27,19 +26,21 @@ public class NearestNeighbor {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(filename));
             String line;
+            boolean firstLine = true;
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith(firstLineOfTheFile)) {
-                    continue; // Skip header
+                if (firstLine) { // Salta l'header
+                    firstLine = false;
+                    continue;
                 }
-                // Add the sample by calling the constructor that takes the string input
                 trainingData.add(new Sample(line));
             }
             reader.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        this.kdtree = new KDTree(trainingData); // Initialize the KDTree using the read points
+        this.kdtree = new KDTree(trainingData);
     }
+
 
     public List<Sample> findKNearestNeighbors(Sample testPoint, int k) {
         return kdtree.kNearestNeighbors(testPoint, k);
