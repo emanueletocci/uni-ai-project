@@ -1,4 +1,4 @@
-package it.unisa.diem.ai.torcs.sensors;
+package it.unisa.diem.ai.torcs.comunication;
 
 import java.util.Hashtable;
 import java.util.Enumeration;

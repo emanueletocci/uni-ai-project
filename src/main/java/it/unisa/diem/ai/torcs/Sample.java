@@ -1,8 +1,13 @@
 package it.unisa.diem.ai.torcs;
 
+/**
+ * Sample class represents a single data point in the dataset.
+ * It contains features and a class label, which can be used for classification tasks.
+ * The class also provides methods to calculate the distance between samples.
+ */
 public class Sample {
     public double[] features;
-    public int cls;
+    public int cls; // intero che rappresenta la classe del campione (1=accelera, 2=frena)
 
     /*
     Constructor to initialize the Sample with a given set of features and class label.
@@ -27,7 +32,7 @@ public class Sample {
     Assumes the last value in the CSV is the class label.
     */
     public Sample(String line) {
-        String[] parts = line.split(",");
+        String[] parts = line.split(";");
         int n = parts.length;
         features = new double[n - 1];
         for (int i = 0; i < n - 1; i++) {

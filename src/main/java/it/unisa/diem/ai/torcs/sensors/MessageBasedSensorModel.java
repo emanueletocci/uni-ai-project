@@ -1,5 +1,7 @@
 package it.unisa.diem.ai.torcs.sensors;
 
+import it.unisa.diem.ai.torcs.comunication.MessageParser;
+
 /**
  * Created by IntelliJ IDEA. User: Administrator Date: Mar 4, 2008 Time: 3:44:29
  * PM
