@@ -14,7 +14,4 @@ public class KeyInput {
     public static void print() {
         System.out.println("W: " + up + " | A: " + left + " | S: " + down + " | D: " + right);
     }
-    static {
-        System.out.println("✅ KeyInput loaded by: " + KeyInput.class.getClassLoader());
-    }
 }
