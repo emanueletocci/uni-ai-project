@@ -98,22 +98,40 @@ public class HumanDriver extends Controller {
 
     // Le label sono essenziali per il calssificatore. Sono sostanzialmente le features quindi dobbiamo decidere quali usare
     private int calculateClassLabel(Action action) {
-        boolean avanti = action.accelerate > 0 && action.gear > 0 && action.brake == 0;
-        boolean retro = action.accelerate > 0 && action.gear == -1 && action.brake == 0;
-        boolean sinistra = action.steering > 0.1f;
-        boolean destra = action.steering < -0.1f;
-        boolean freno = action.brake > 0;
+        // Soglie personalizzabili per distinguere tra "molto", "poco", ecc.
+        final float SOGLIA_MOLTO = 0.7f;
+        final float SOGLIA_POCO = 0.2f;
 
-        // Più specifici prima!
-        if (avanti && sinistra) return 2;
-        if (avanti && destra) return 3;
-        if (retro && sinistra) return 6;
-        if (retro && destra) return 7;
-        if (avanti) return 1;
-        if (retro) return 5;
-        if (freno) return 4;
-        return 0; // nessuna azione
+        if (action.accelerate > 0.8 && action.gear > 0 && Math.abs(action.steering) < SOGLIA_POCO && action.brake == 0) {
+            return 0; // Accelera dritto
+        }
+        if (action.steering > SOGLIA_MOLTO) {
+            return 1; // Gira molto a sinistra
+        }
+        if (action.steering > SOGLIA_POCO) {
+            return 2; // Gira a sinistra
+        }
+        if (action.steering > 0) {
+            return 3; // Gira poco a sinistra
+        }
+        if (action.steering < -SOGLIA_MOLTO) {
+            return 4; // Gira molto a destra
+        }
+        if (action.steering < -SOGLIA_POCO) {
+            return 5; // Gira a destra
+        }
+        if (action.steering < 0) {
+            return 6; // Gira poco a destra
+        }
+        if (action.brake > 0.1) {
+            return 7; // Frena
+        }
+        if (action.gear == -1 && action.accelerate > 0) {
+            return 8; // Retromarcia
+        }
+        return 9; // Decelera o nessuna azione
     }
+
 
     private void updateClutch(int currentGear, int newGear) {
         if(currentGear != newGear) {

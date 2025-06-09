@@ -6,72 +6,126 @@ import it.unisa.diem.ai.torcs.classifier.NearestNeighbor;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
 
 public class AutonomousDriverUtility {
-    //pilota autonomo che, dato lo stato dell'auto (sensori), decide quale azione intraprendere usando un classificatore k-NN
-    private NearestNeighbor knn;
 
-//inizializzo il classificatore leggendo un dataset che contiene coppie osservazione-azione
+    private final NearestNeighbor knn;
+    private final Action action;
+
     public AutonomousDriverUtility(String datasetPath) {
         knn = new NearestNeighbor(datasetPath);
+        action = new Action();
     }
 
     public Action decide(SensorModel sensors, int gear) {
-        //tutti i 19 sensori (utility)
-         double[] edge = sensors.getTrackEdgeSensors(); 
-        // 1. Estrai le feature dai sensori (come nel dataset)
-        double[] features = {
-                sensors.getSpeed(),
-                sensors.getTrackPosition(),
-                sensors.getTrackEdgeSensors()[4],
-                sensors.getTrackEdgeSensors()[6],
-                sensors.getTrackEdgeSensors()[8],
-                sensors.getTrackEdgeSensors()[9],
-                sensors.getTrackEdgeSensors()[10],
-                sensors.getTrackEdgeSensors()[12],
-                sensors.getTrackEdgeSensors()[14],
-                sensors.getAngleToTrackAxis()
-        };        Sample testSample = new Sample(features);
+        // Feature del dataset light: 9 track selezionati + trackPos, angle, speedX
+        double[] features = new double[12];
 
-        // Predici la classe attraverso il knn
-        int predictedClass = knn.classify(new Sample(features), 5);
+        // Sensori track selezionati (indici 0,3,4,8,9,10,14,15,18)
+        double[] track = sensors.getTrackEdgeSensors();
+        features[0] = track[0];   // track0
+        features[1] = track[3];   // track3
+        features[2] = track[4];   // track4
+        features[3] = track[8];   // track8
+        features[4] = track[9];   // track9
+        features[5] = track[10];  // track10
+        features[6] = track[14];  // track14
+        features[7] = track[15];  // track15
+        features[8] = track[18];  // track18
 
-        // Mappa la classe su Action
-        Action action = new Action();
+        // Aggiungi le altre features
+        features[9] = sensors.getTrackPosition();   // trackPos
+        features[10] = sensors.getAngleToTrackAxis(); // angle
+        features[11] = sensors.getSpeed();          // speedX
+
+        Sample testSample = new Sample(features);
+        int predictedClass = knn.classify(testSample, 5); // k=5
+
         switch (predictedClass) {
-            case 0: // Accelerazione
-                action.accelerate = 1d;
-                action.steering = 0d;
-                action.brake = 0d;
-                break;
-            case 1: // Frenata
-                action.brake = 0.5d;
-                action.accelerate = 0d;
-                action.steering = 0d;
-                break;
-            case 2: // Sterzata a sinistra
-                action.steering = 0.5d;
-                action.accelerate = 0.25d;
-                action.brake = 0d;
-                break;
-            case 3: // Sterzata a destra
-                action.steering = -0.5d;
-                action.accelerate = 0.25d;
-                action.brake = 0d;
-                break;
-            case 4: // Retromarcia
-                action.gear = -1;
-                action.accelerate = 0.6d;
-                action.steering = 0d;
-                action.brake = 0d;
-                break;
-            case 5: // Default
-                action.accelerate = 0.3d;
-                action.steering = 0d;
-                action.brake = 0d;
-                break;
+            case 0: accelera(); break;
+            case 1: giraSXMolto(); break;
+            case 2: giraSX(); break;
+            case 3: giraSXPoco(); break;
+            case 4: giraDXMolto(); break;
+            case 5: giraDX(); break;
+            case 6: giraDXPoco(); break;
+            case 7: frena(); break;
+            case 8: retromarcia(); break;
+            default: decelera(); break;
         }
+
         action.gear = gear;
         return action;
     }
+    // 0: Accelera dritto
+    private void accelera() {
+        action.accelerate = 1.0;
+        action.brake = 0.0;
+        action.steering = 0.0;
+        if (action.gear == -1) action.gear = 1; // Torna in marcia avanti se eri in retro
+    }
+
+    // 1: Gira molto a sinistra
+    private void giraSXMolto() {
+        action.accelerate = 0.7;   // accelera meno per non perdere aderenza
+        action.brake = 0.0;
+        action.steering = 1.0;     // sterzo massimo a sinistra
+    }
+
+    // 2: Gira a sinistra
+    private void giraSX() {
+        action.accelerate = 0.8;
+        action.brake = 0.0;
+        action.steering = 0.5;     // sterzo medio a sinistra
+    }
+
+    // 3: Gira poco a sinistra
+    private void giraSXPoco() {
+        action.accelerate = 1.0;
+        action.brake = 0.0;
+        action.steering = 0.2;     // sterzo leggero a sinistra
+    }
+
+    // 4: Gira molto a destra
+    private void giraDXMolto() {
+        action.accelerate = 0.7;
+        action.brake = 0.0;
+        action.steering = -1.0;    // sterzo massimo a destra
+    }
+
+    // 5: Gira a destra
+    private void giraDX() {
+        action.accelerate = 0.8;
+        action.brake = 0.0;
+        action.steering = -0.5;    // sterzo medio a destra
+    }
+
+    // 6: Gira poco a destra
+    private void giraDXPoco() {
+        action.accelerate = 1.0;
+        action.brake = 0.0;
+        action.steering = -0.2;    // sterzo leggero a destra
+    }
+
+    // 7: Frena
+    private void frena() {
+        action.accelerate = 0.0;
+        action.brake = 1.0;        // freno massimo
+        action.steering = 0.0;
+    }
+
+    // 8: Retromarcia
+    private void retromarcia() {
+        action.gear = -1;
+        action.accelerate = 0.3;   // accelerazione moderata in retro
+        action.brake = 0.0;
+        action.steering = 0.0;
+    }
+
+    // default: Decelera (nessuna azione)
+    private void decelera() {
+        if (action.gear == -1) action.gear = 1;
+        action.accelerate = 0.0;
+        action.brake = 0.0;
+        action.steering = 0.0;
+    }
+
 }
-
-

@@ -3,7 +3,6 @@ package it.unisa.diem.ai.torcs.controllers;
 import it.unisa.diem.ai.torcs.actions.Action;
 import it.unisa.diem.ai.torcs.classifier.NearestNeighbor;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
-import it.unisa.diem.ai.torcs.utilities.DataLogger;
 
 public class SimpleDriver extends Controller {
 
@@ -47,17 +46,10 @@ public class SimpleDriver extends Controller {
     // current clutch
     private float clutch = 0;
 
-    private DataLogger logger;
-
-    private AutonomousDriverUtility autonomousDriver;
-    private NearestNeighbor knn;
-
+    private final AutonomousDriverUtility autonomousDriver;
 
     public SimpleDriver() {
-        knn = new NearestNeighbor("data/dataset.csv");
-        autonomousDriver = new AutonomousDriverUtility("data/dataset.csv");
-        logger = new DataLogger("data/dataset.csv");
-        System.out.println("Simple Driver initialized!");
+        autonomousDriver = new AutonomousDriverUtility("data/dataset_light.csv");
     }
 
     public void reset() {

@@ -6,46 +6,59 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class NearestNeighbor {
 
-    private List<Sample> trainingData;
+    private final List<Sample> trainingData;
     private KDTree kdtree;
-    private int[] classCounts; // Assuming classes are labeled 0-9
-    private String firstLineOfTheFile;
+    private final int[] classCounts; // Assuming classes are labeled 0-9
 
     public NearestNeighbor(String filename) {
         this.trainingData = new ArrayList<>();
         this.kdtree = null;
-        this.firstLineOfTheFile = "speed;trackPosition;trackEdgeSensor4;trackEdgeSensor6;trackEdgeSensor8;trackEdgeSensor9;"
-                + "trackEdgeSensor10;trackEdgeSensor12;trackEdgeSensor14;angleToTrackAxis;classLabel";
-        this.classCounts = new int[10]; // Adjust if you have a different number of classes
+        this.classCounts = new int[10];
         this.readPointsFromCSV(filename);
     }
 
     private void readPointsFromCSV(String filename) {
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(filename));
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            // Leggi e scarta la prima riga (header)
+            String header = reader.readLine();
+            if (header == null) {
+                System.err.println("File vuoto!");
+                return;
+            }
             String line;
-            boolean firstLine = true;
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith(firstLineOfTheFile)) {
-                    continue; // Skip header
+                if (line.trim().isEmpty()) continue;
+                // Salta eventuali header ripetuti (es: merge di file)
+                if (line.toLowerCase().contains("track0") || line.toLowerCase().contains("classlabel")) {
+                    System.err.println("Salto header ripetuto o riga non dati: " + line);
+                    continue;
+                }
+                String[] parts = line.split(";");
+                if (parts.length != 13) { // 12 feature + 1 classLabel
+                    System.err.println("Riga malformata: " + line);
+                    continue;
                 }
                 try {
-                    if (line.trim().isEmpty()) continue; // Salta righe vuote
                     trainingData.add(new Sample(line));
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } catch (NumberFormatException e) {
+                    System.err.println("Errore di parsing nella riga: " + line);
                 }
             }
-            reader.close();
+
+            if (trainingData.isEmpty()) {
+                System.err.println("Nessun dato nel file dopo l'header!");
+            }
+            this.kdtree = new KDTree(trainingData);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        this.kdtree = new KDTree(trainingData);
     }
+
 
     public List<Sample> findKNearestNeighbors(Sample testPoint, int k) {
         return kdtree.kNearestNeighbors(testPoint, k);
@@ -55,9 +68,7 @@ public class NearestNeighbor {
         List<Sample> kNearestNeighbors = findKNearestNeighbors(testPoint, k);
 
         // Reset class counts
-        for (int i = 0; i < classCounts.length; i++) {
-            classCounts[i] = 0;
-        }
+        Arrays.fill(classCounts, 0);
 
         // Count the occurrences of each class in the k nearest neighbors
         for (Sample neighbor : kNearestNeighbors) {
