@@ -6,13 +6,17 @@ import it.unisa.diem.ai.torcs.classifier.NearestNeighbor;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
 
 public class AutonomousDriverUtility {
+    //pilota autonomo che, dato lo stato dell'auto (sensori), decide quale azione intraprendere usando un classificatore k-NN
     private NearestNeighbor knn;
 
+//inizializzo il classificatore leggendo un dataset che contiene coppie osservazione-azione
     public AutonomousDriverUtility(String datasetPath) {
         knn = new NearestNeighbor(datasetPath);
     }
 
     public Action decide(SensorModel sensors, int gear) {
+        //tutti i 19 sensori (utility)
+         double[] edge = sensors.getTrackEdgeSensors(); 
         // 1. Estrai le feature dai sensori (come nel dataset)
         double[] features = {
                 sensors.getSpeed(),
@@ -27,7 +31,7 @@ public class AutonomousDriverUtility {
                 sensors.getAngleToTrackAxis()
         };        Sample testSample = new Sample(features);
 
-        // Predici la classe
+        // Predici la classe attraverso il knn
         int predictedClass = knn.classify(new Sample(features), 5);
 
         // Mappa la classe su Action

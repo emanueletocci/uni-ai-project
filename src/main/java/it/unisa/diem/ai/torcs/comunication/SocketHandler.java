@@ -11,10 +11,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
-/**
- * @author Daniele Loiacono
- * 
- */
+
 public class SocketHandler {
 
 	private InetAddress address;
