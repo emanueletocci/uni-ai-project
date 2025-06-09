@@ -81,7 +81,7 @@ public class HumanDriver extends Controller {
         float steeringInput = 0.0f;
         if (KeyInput.left) steeringInput += 1.0f;
         if (KeyInput.right) steeringInput -= 1.0f;
-        float steeringSensitivity = 0.3f; // Puoi modificare la sensibilità
+        float steeringSensitivity = 0.3f; // possiamo modificare la sensibilità
         action.steering = Math.max(-1.0f, Math.min(1.0f, steeringInput * steeringSensitivity));
 
         // 5. Calcolo classLabel (opzionale, per behavioral cloning)
