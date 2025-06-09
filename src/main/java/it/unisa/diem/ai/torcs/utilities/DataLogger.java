@@ -26,11 +26,7 @@ public class DataLogger {
             double trackPos,
             double angle,
             double speedX,
-            double rpm,
-            double gear,
-            double accelerate,
-            double brake,
-            double steering,
+            double speedY,
             int classLabel
     ) {
         File file = new File(filename);
@@ -38,7 +34,7 @@ public class DataLogger {
         if (!headerFullWritten || !file.exists() || file.length() == 0) {
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename, true))) {
                 for (int i = 0; i < 19; i++) bw.write("track" + i + ";");
-                bw.write("trackPos;angle;speedX;rpm;gear;accelerate;brake;steering;classLabel\n");
+                bw.write("trackPos;angle;speedX;speedY;classLabel\n");
                 headerFullWritten = true;
             } catch (IOException e) {
                 System.err.println("Errore scrittura header CSV (full): " + e.getMessage());
@@ -47,21 +43,18 @@ public class DataLogger {
         // Scrivi dati
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename, true))) {
             for (int i = 0; i < 19; i++) bw.write(track[i] + ";");
-            bw.write(trackPos + ";" + angle + ";" + speedX + ";" + rpm + ";" + gear + ";" + accelerate + ";" + brake + ";" + steering + ";" + classLabel + "\n");
+            bw.write(trackPos + ";" + angle + ";" + speedX + ";" + speedY  + ";" + classLabel + "\n");
         } catch (IOException e) {
             System.err.println("Errore scrittura CSV (full): " + e.getMessage());
         }
     }
 
-    // Logging leggero: solo 5 sensori (2 per lato + centrale)
+    // Logging leggero: solo 9 sensori
     public void logLight(
-            double[] track,        // lunghezza 19
+            double[] track,        // lunghezza 9
             double trackPos,
             double angle,
             double speedX,
-            double accelerate,
-            double brake,
-            double steering,
             int classLabel
     ) {
         File file = new File(filename);
@@ -71,7 +64,7 @@ public class DataLogger {
         if (!headerLightWritten || !file.exists() || file.length() == 0) {
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename, true))) {
                 for (int idx : selected) bw.write("track" + idx + ";");
-                bw.write("trackPos;angle;speedX;accelerate;brake;steering;classLabel\n");
+                bw.write("trackPos;angle;speedX;classLabel\n");
                 headerLightWritten = true;
             } catch (IOException e) {
                 System.err.println("Errore scrittura header CSV (light): " + e.getMessage());
@@ -80,7 +73,7 @@ public class DataLogger {
         // Scrivi dati
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename, true))) {
             for (int idx : selected) bw.write(track[idx] + ";");
-            bw.write(trackPos + ";" + angle + ";" + speedX + ";" + accelerate + ";" + brake + ";" + steering + ";" + classLabel + "\n");
+            bw.write(trackPos + ";" + angle + ";" + speedX +  ";" + classLabel + "\n");
         } catch (IOException e) {
             System.err.println("Errore scrittura CSV (light): " + e.getMessage());
         }

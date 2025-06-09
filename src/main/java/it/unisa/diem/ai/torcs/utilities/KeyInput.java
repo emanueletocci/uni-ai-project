@@ -9,9 +9,11 @@ public class KeyInput {
     public static boolean down = false;   // 'S'
     public static boolean left = false;   // 'A'
     public static boolean right = false;  // 'D'
+    public static boolean brake = false;  // 'Space'
 
     //debug disperato
     public static void print() {
-        System.out.println("W: " + up + " | A: " + left + " | S: " + down + " | D: " + right);
+        System.out.println("W: " + up + " | A: " + left + " | S: " + down + " | D: " + right + " | SPACE: " + brake);
     }
+
 }

@@ -76,25 +76,27 @@ public class HumanDriver extends Controller {
         int gear = model.getGear();
 
         // 2. Gestione manuale: acceleratore, freno e retromarcia
-        if (KeyInput.down) {
-            if (speedX < 1.0) { // Quasi fermo → retro
-                action.gear = -1;
-                action.accelerate = 1.0f; // Acceleratore per retro
-                action.brake = 0.0f;
-            } else { // In movimento: frena
-                action.gear = Math.max(1, gear); // Mantieni marcia avanti
-                action.accelerate = 0.0f;
-                action.brake = filterABS(sensors, 1.0f);
-            }
-        } else {
+        if (KeyInput.brake) {
+            // Freno sempre, priorità massima
+            action.brake = 1.0f;
+            action.accelerate = 0.0f;
+            // Mantieni la marcia attuale (o automatica)
+        } else if (KeyInput.down && speedX < 1.0) {
+            // Se S e quasi fermo → retro
+            action.gear = -1;
+            action.accelerate = 1.0f;
             action.brake = 0.0f;
-            if (KeyInput.up) {
-                action.accelerate = 1.0f;
-                if (gear < 1) action.gear = 1; // Torna in prima se eri in retro
-            } else {
-                action.accelerate = 0.0f;
-            }
+        } else if (KeyInput.up) {
+            // Accelerazione in avanti
+            action.accelerate = 1.0f;
+            action.brake = 0.0f;
+            if (gear < 1) action.gear = 1; // Torna in prima se eri in retro
+        } else {
+            // Nessun comando: nessuna accelerazione né freno
+            action.accelerate = 0.0f;
+            action.brake = 0.0f;
         }
+
 
         // 3. Cambio automatico SOLO se non in retromarcia
         if (action.gear != -1) {
@@ -113,11 +115,9 @@ public class HumanDriver extends Controller {
         int classLabel = calculateClassLabel(action);
 
         // 6. Logging (opzionale, puoi scegliere se usare classLabel)
-        fullLogger.logFull(track, trackPos, angle, speedX, rpm, action.gear,
-                action.accelerate, action.brake, action.steering, classLabel);
+        fullLogger.logFull(track, trackPos, angle, speedX, rpm, classLabel);
 
-        lightLogger.logLight(track, trackPos, angle, speedX,
-                action.accelerate, action.brake, action.steering, classLabel);
+        lightLogger.logLight(track, trackPos, angle, speedX, classLabel);
 
         return action;
     }
