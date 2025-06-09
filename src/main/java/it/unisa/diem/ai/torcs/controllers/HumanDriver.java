@@ -78,7 +78,7 @@ public class HumanDriver extends Controller {
         // 2. Gestione manuale: acceleratore, freno e retromarcia
         if (KeyInput.brake) {
             // Freno sempre, priorità massima
-            action.brake = 1.0f;
+            action.brake = 0.8f;
             action.accelerate = 0.0f;
             // Mantieni la marcia attuale (o automatica)
         } else if (KeyInput.down && speedX < 1.0) {
@@ -131,26 +131,15 @@ public class HumanDriver extends Controller {
         boolean destra = action.steering < -0.1f;
         boolean freno = action.brake > 0;
 
-        if (avanti) return 1;
+        // Più specifici prima!
         if (avanti && sinistra) return 2;
         if (avanti && destra) return 3;
-        if (freno) return 4;
-        if (retro) return 5;
         if (retro && sinistra) return 6;
         if (retro && destra) return 7;
+        if (avanti) return 1;
+        if (retro) return 5;
+        if (freno) return 4;
         return 0; // nessuna azione
-    }
-
-    // Metodo per il filtro ABS [Aggiungere nella classe]
-    private float filterABS(SensorModel sensors, float brake) {
-        float abs = 0.0f;
-        for(int i = 0; i < 4; i++) {
-            float slip = Math.abs((float) (wheelRadius[i] * sensors.getWheelSpinVelocity()[i] - sensors.getSpeed()));
-            if(slip > absSlip && sensors.getSpeed() > absMinSpeed) {
-                abs = Math.max(abs, Math.min(1.0f, (slip - absSlip)/absRange));
-            }
-        }
-        return Math.max(0.0f, brake - abs);
     }
 
     private void updateClutch(int currentGear, int newGear) {
