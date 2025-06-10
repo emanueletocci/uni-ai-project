@@ -22,7 +22,7 @@ public class NearestNeighbor {
     public NearestNeighbor(String filename) {
         this.trainingData = new ArrayList<>();
         this.kdtree = null;
-        this.classCounts = new int[10];  // Suppone classi etichettate da 0 a 9
+        this.classCounts = new int[8];  // Suppone classi etichettate da 0 a 9
         this.readPointsFromCSV(filename);
     }
 
