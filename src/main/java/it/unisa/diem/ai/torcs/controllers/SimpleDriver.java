@@ -154,35 +154,25 @@ public class SimpleDriver extends Controller {
         return action;
     }
 
-        /*
-         * CLASSI
-            0: Accelera dritto
-            1: Accelera e gira a sinistra
-            2: Accelera e gira a destra
-            3: Frena dritto
-            4: Retromarcia
-            5: Nessuna azione/decelerazione
-            6: Frena e gira a sinistra
-            7: Frena e gira a destra
-            8: Solo gira a sinistra (senza accelerare/frenare)
-            9: Solo gira a destra (senza accelerare/frenare)
-         */
-
+    /*
+        0	acceleraDritto	Accelera dritto
+        1	giraLeggeroSinistra	Gira leggermente a sinistra
+        2	giraForteSinistra	Gira forte a sinistra
+        3	giraLeggeroDestra	Gira leggermente a destra
+        4	giraForteDestra	Gira forte a destra
+        5	frena	Frena (dritto)
+        6	retromarcia	Retromarcia
+        7	mantieniVelocita	Nessuna azione / decelerazione
+     */
     private int calculateClassLabel(Action action) {
-        if (action.gear == -1 && action.accelerate > 0) return 4; // Retromarcia
-        if (action.brake > 0.1) {
-            if (action.steering > 0.5) return 6; // Frena e gira a sinistra
-            if (action.steering < -0.5) return 7; // Frena e gira a destra
-            return 3; // Frena dritto
-        }
-        if (action.accelerate > 0.7) {
-            if (action.steering > 0.5) return 1; // Accelera e gira a sinistra
-            if (action.steering < -0.5) return 2; // Accelera e gira a destra
-            return 0; // Accelera dritto
-        }
-        if (action.steering > 0.5) return 8; // Solo gira a sinistra
-        if (action.steering < -0.5) return 9; // Solo gira a destra
-        return 5; // Nessuna azione/decelerazione
+        if (action.gear == -1 && action.accelerate > 0) return 6; // Retromarcia
+        if (action.brake > 0.1) return 5; // Frena
+        if (action.steering >= 0.6f) return 2; // Gira forte a sinistra
+        if (action.steering >= 0.15f) return 1; // Gira leggermente a sinistra
+        if (action.steering <= -0.6f) return 4; // Gira forte a destra
+        if (action.steering <= -0.15f) return 3; // Gira leggermente a destra
+        if (action.accelerate > 0.7f) return 0; // Accelera dritto
+        return 7; // Nessuna azione / decelerazione
     }
 
     private float filterABS(SensorModel sensors, float brake) {

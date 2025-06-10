@@ -10,8 +10,6 @@ public class AutonomousDriver extends Controller {
 
     private final NearestNeighbor knn;
     private final Action action;
-    private double angle, speed, position;
-    private double[] trackEdgeSensors;
 
     public AutonomousDriver() {
         // Percorso del dataset da behavioral cloning
@@ -22,10 +20,10 @@ public class AutonomousDriver extends Controller {
     @Override
     public Action control(SensorModel sensors) {
         // Lettura sensori principali
-        angle = sensors.getAngleToTrackAxis();
-        position = sensors.getTrackPosition();
-        speed = sensors.getSpeed();
-        trackEdgeSensors = sensors.getTrackEdgeSensors();
+        double angle = sensors.getAngleToTrackAxis();
+        double position = sensors.getTrackPosition();
+        double speed = sensors.getSpeed();
+        double[] trackEdgeSensors = sensors.getTrackEdgeSensors();
 
         // Estrazione e normalizzazione delle feature
         double[] features = FeatureNormalizer.extractAndNormalizeFeatures(
@@ -38,6 +36,18 @@ public class AutonomousDriver extends Controller {
         // Classificazione tramite KNN
         int predictedClass = knn.classify(new Sample(features), 5);
 
+        /*
+         * CLASSI
+            0 = acceleraDritto
+            1 = giraLeggeroSinistra
+            2 = giraForteSinistra
+            3 = giraLeggeroDestra
+            4 = giraForteDestra
+            5 = frena
+            6 = retromarcia
+            7 = mantieniVelocita
+         */
+
         // Azione in base alla classe predetta (allineata al dataset semplificato)
         switch (predictedClass) {
             case 0: acceleraDritto(action); break;
@@ -49,7 +59,6 @@ public class AutonomousDriver extends Controller {
             case 6: retromarcia(action, sensors); break;
             default: mantieniVelocita(action); break;
         }
-
 
 
         // Cambio marcia automatico
@@ -65,7 +74,7 @@ public class AutonomousDriver extends Controller {
         return action;
     }
 
-    // Cambio marcia automatico (stile SimpleDriver)
+    // Cambio marcia automatico
     private int getGear(SensorModel sensors) {
         final int[] gearUp = {5000, 6000, 6000, 6500, 7000, 0};
         final int[] gearDown = {0, 2500, 3000, 3000, 3500, 3500};
