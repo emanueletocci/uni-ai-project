@@ -49,7 +49,7 @@ public class SimpleDriver extends Controller {
     private final AutonomousDriverUtility autonomousDriver;
 
     public SimpleDriver() {
-        autonomousDriver = new AutonomousDriverUtility("data/dataset_light.csv");
+        autonomousDriver = new AutonomousDriverUtility("data/dataset.csv");
     }
 
     public void reset() {
@@ -148,59 +148,17 @@ public class SimpleDriver extends Controller {
     }
 
     public Action control(SensorModel sensors) {
-        // Controlla se l'auto è attualmente bloccata
-        /**
-         Se l'auto ha un angolo, rispetto alla traccia, superiore a 30°
-         incrementa "stuck" che è una variabile che indica per quanti cicli l'auto è in
-         condizione di difficoltà.
-         Quando l'angolo si riduce, "stuck" viene riportata a 0 per indicare che l'auto è
-         uscita dalla situaizone di difficoltà
-         **/
-        if (Math.abs(sensors.getAngleToTrackAxis()) > stuckAngle) {
-            // update stuck counter
-            stuck++;
-        } else {
-            // if not stuck reset stuck counter
-            stuck = 0;
-        }
+        int gear = getGear(sensors);
+        Action action = autonomousDriver.decide(sensors, gear);
 
-        // Applicare la polizza di recupero o meno in base al tempo trascorso
-        /**
-         Se "stuck" è superiore a 25 (stuckTime) allora procedi a entrare in situaizone di RECOVERY
-         per far fronte alla situazione di difficoltà
-         **/
+        // Guida ibrida
+        action.brake = filterABS(sensors, (float) action.brake);
+        // Aggiorna la frizione
+        clutch = clutching(sensors, clutch);
+        action.clutch = clutch;
 
-        if (stuck > stuckTime) { //Auto Bloccata
-            /**
-             * Impostare la marcia e il comando di sterzata supponendo che l'auto stia puntando
-             * in una direzione al di fuori di pista
-             **/
+        return action;
 
-            // Per portare la macchina parallela all'asse TrackPos
-            float steer = (float) (-sensors.getAngleToTrackAxis() / steerLock);
-            int gear = -1; // Retromarcia
-
-            // Se l'auto è orientata nella direzione corretta invertire la marcia e sterzare
-            if (sensors.getAngleToTrackAxis() * sensors.getTrackPosition() > 0) {
-                gear = 1;
-                steer = -steer;
-            }
-            clutch = clutching(sensors, clutch);
-            // Costruire una variabile CarControl e restituirla
-            Action action = new Action();
-            action.gear = gear;
-            action.steering = steer;
-            action.accelerate = 1.0;
-            action.brake = 0;
-            action.clutch = clutch;
-
-            return action;
-        }
-        //Auto non Bloccata, guida tramite classificazione KNN
-        else {
-            int gear = getGear(sensors);
-            return autonomousDriver.decide(sensors, gear);
-        }
     }
 
     private float filterABS(SensorModel sensors, float brake) {

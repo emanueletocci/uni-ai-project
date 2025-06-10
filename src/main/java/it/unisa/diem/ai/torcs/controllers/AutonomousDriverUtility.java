@@ -4,16 +4,14 @@ import it.unisa.diem.ai.torcs.Sample;
 import it.unisa.diem.ai.torcs.actions.Action;
 import it.unisa.diem.ai.torcs.classifier.NearestNeighbor;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
+import it.unisa.diem.ai.torcs.utilities.FeatureNormalizer;
 
 public class AutonomousDriverUtility {
     private final NearestNeighbor knn;
     private final Action action;
 
-    // Costanti per la normalizzazione
-    private static final double MAX_TRACK_VALUE = 200.0;
-    private static final double MAX_SPEED = 300.0;
-    private static final double STEER_LIMIT = 0.8;
-    private static final int[] SENSOR_INDICES = {0, 3, 4, 8, 9, 10, 14, 15, 18};
+    private double angle, speed, position;
+    private double[] trackEdgeSensors;
 
     public AutonomousDriverUtility(String datasetPath) {
         knn = new NearestNeighbor(datasetPath);
@@ -21,47 +19,40 @@ public class AutonomousDriverUtility {
     }
 
     public Action decide(SensorModel sensors, int gear) {
-        double[] features = extractAndNormalizeFeatures(sensors);
+        angle = sensors.getAngleToTrackAxis();
+        position = sensors.getTrackPosition();
+        speed = sensors.getSpeed();
+        trackEdgeSensors = sensors.getTrackEdgeSensors();
+
+        double[] features = FeatureNormalizer.extractAndNormalizeFeatures(
+                trackEdgeSensors,
+                position,
+                angle,
+                speed
+        );
+
         int predictedClass = knn.classify(new Sample(features), 5);
 
-        applyAction(predictedClass, sensors.getSpeed());
+        applyAction(predictedClass);
         handleGearAndSafety(gear, sensors.getTrackPosition());
 
         return action;
     }
 
-    private double[] extractAndNormalizeFeatures(SensorModel sensors) {
-        double[] features = new double[12];
-        double[] track = sensors.getTrackEdgeSensors();
 
-        // Normalizzazione sensori di bordo pista
-        for(int i = 0; i < SENSOR_INDICES.length; i++) {
-            double value = Math.max(0, track[SENSOR_INDICES[i]]);
-            features[i] = value / MAX_TRACK_VALUE;
-        }
-
-        // Altre feature
-        features[9] = sensors.getTrackPosition();  // Già normalizzato [-1,1]
-        features[10] = sensors.getAngleToTrackAxis() / Math.PI;
-        features[11] = sensors.getSpeed() / MAX_SPEED;
-
-        return features;
-    }
-
-    private void applyAction(int predictedClass, double currentSpeed) {
-        double speedFactor = 1.0 - (currentSpeed / MAX_SPEED);
+    private void applyAction(int predictedClass) {
 
         switch(predictedClass) {
-            case 0: fullAcceleration(); break;
-            case 1: sharpLeft(speedFactor); break;
-            case 2: moderateLeft(speedFactor); break;
-            case 3: gentleLeft(speedFactor); break;
-            case 4: sharpRight(speedFactor); break;
-            case 5: moderateRight(speedFactor); break;
-            case 6: gentleRight(speedFactor); break;
-            case 7: fullBrake(); break;
-            case 8: reverse(); break;
-            default: safeDeceleration(); break;
+            case 0: accelera(); break;
+            case 1: giraSXMolto(); break;
+            case 2: giraSX(); break;
+            case 3: giraSXPoco(); break;
+            case 4: giraDXMolto(); break;
+            case 5: giraDX(); break;
+            case 6: giraDXPoco(); break;
+            case 7: frena(); break;
+            case 8: retromarcia(); break;
+            default: decelera(); break;
         }
     }
 
@@ -69,62 +60,78 @@ public class AutonomousDriverUtility {
         action.gear = gear;
 
         // Safety override per posizioni estreme
-        if(Math.abs(trackPos) > 0.9) {
+        if (Math.abs(trackPos) > 0.9) {
             action.accelerate = 0.1;
             action.steering = (trackPos > 0) ? -0.5 : 0.5;
         }
     }
 
     // Azioni di guida con parametrizzazione dinamica
-    private void fullAcceleration() {
-        action.accelerate = 1.0;
-        action.brake = 0.0;
-        action.steering = 0.0;
+    private void accelera() {
+        if (action.gear == -1) {
+            action.gear = 1;
+        }
+        action.steering = 0;
+        action.brake = 0;
+        action.accelerate = 1;
     }
 
-    private void sharpLeft(double speedFactor) {
-        action.accelerate = 0.7 * speedFactor;
-        action.steering = STEER_LIMIT;
-    }
-
-    private void moderateLeft(double speedFactor) {
-        action.accelerate = 0.8 * speedFactor;
+    private void giraSXMolto() {
+        action.accelerate = 0;
+        action.brake = 1;
         action.steering = 0.5;
     }
 
-    private void gentleLeft(double speedFactor) {
-        action.accelerate = speedFactor;
-        action.steering = 0.2;
+    private void giraSX() {
+        action.accelerate = 0.5;
+        action.brake = 0;
+        action.steering = 0.25;
     }
 
-    private void sharpRight(double speedFactor) {
-        action.accelerate = 0.7 * speedFactor;
-        action.steering = -STEER_LIMIT;
+    private void giraSXPoco() {
+        action.accelerate = 1;
+        action.brake = 0;
+        action.steering = 0.1;
     }
 
-    private void moderateRight(double speedFactor) {
-        action.accelerate = 0.8 * speedFactor;
+    private void giraDXMolto() {
+        action.accelerate = 0;
+        action.brake = 1;
         action.steering = -0.5;
     }
 
-    private void gentleRight(double speedFactor) {
-        action.accelerate = speedFactor;
-        action.steering = -0.2;
+    private void giraDX() {
+        action.accelerate = 0.5;
+        action.brake = 0;
+        action.steering = -0.25;
     }
 
-    private void fullBrake() {
-        action.accelerate = 0.0;
-        action.brake = 1.0;
-        action.steering = 0.0;
+    private void giraDXPoco() {
+        action.accelerate = 1;
+        action.brake = 0;
+        action.steering = -0.1;
     }
 
-    private void reverse() {
+    private void frena() {
+        action.steering = 0;
+        action.accelerate = 0;
+        action.brake = 1;
+    }
+
+    private void retromarcia() {
+        double steerLock = 0.785398; // ad esempio, 45° in radianti
         action.gear = -1;
-        action.accelerate = 0.3;
+        action.brake = 0;
+        action.accelerate = 0.3f;
+        action.steering = (float) (-angle / steerLock);
     }
 
-    private void safeDeceleration() {
-        action.accelerate = 0.0;
-        action.brake = 0.2;  // Frenata leggera di sicurezza
+    private void decelera() {
+        if (action.gear == -1) {
+            action.gear = 1; // Uscita dalla retromarcia se in decelerazione
+        }
+        action.accelerate = 0;
+        action.brake = 0.2f; // Piccola frenata per rallentare
+        action.steering = 0;
     }
 }
