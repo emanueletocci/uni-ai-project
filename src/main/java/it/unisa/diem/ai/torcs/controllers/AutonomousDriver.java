@@ -7,6 +7,37 @@ import it.unisa.diem.ai.torcs.sensors.SensorModel;
 import it.unisa.diem.ai.torcs.utilities.FeatureNormalizer;
 
 public class AutonomousDriver extends Controller {
+    final int[] gearUp = { 5000, 6000, 6000, 6500, 7000, 0 };
+    final int[] gearDown = { 0, 2500, 3000, 3000, 3500, 3500 };
+
+    final int stuckTime = 25;
+    final float stuckAngle = (float) 0.523598775; // PI/6
+
+    final float maxSpeedDist = 70;
+    final float maxSpeed = 150;
+    final float sin5 = (float) 0.08716;
+    final float cos5 = (float) 0.99619;
+
+    final float steerLock = (float) 0.785398;
+    final float steerSensitivityOffset = (float) 80.0;
+    final float wheelSensitivityCoeff = 1;
+
+    final float[] wheelRadius = { (float) 0.3179, (float) 0.3179, (float) 0.3276, (float) 0.3276 };
+    final float absSlip = (float) 2.0;
+    final float absRange = (float) 3.0;
+    final float absMinSpeed = (float) 3.0;
+
+    final float clutchMax = (float) 0.5;
+    final float clutchDelta = (float) 0.05;
+    final float clutchRange = (float) 0.82;
+    final float clutchDeltaTime = (float) 0.02;
+    final float clutchDeltaRaced = 10;
+    final float clutchDec = (float) 0.01;
+    final float clutchMaxModifier = (float) 1.3;
+    final float clutchMaxTime = (float) 1.5;
+
+    private int stuck = 0;
+    private float clutch = 0;
 
     private final NearestNeighbor knn;
     private final Action action;
@@ -26,16 +57,39 @@ public class AutonomousDriver extends Controller {
         double speed = sensors.getSpeed();
         double[] trackEdgeSensors = sensors.getTrackEdgeSensors();
 
-        // Estrazione e normalizzazione delle feature
-        double[] features = FeatureNormalizer.extractAndNormalizeFeatures(
-                trackEdgeSensors,
-                position,
-                angle,
-                speed
-        );
+        // Recovery Policy
+        if (Math.abs(angle) > stuckAngle) {
+            stuck++;
+        } else {
+            stuck = 0;
+        }
 
-        // Classificazione tramite KNN
-        int predictedClass = knn.classify(new Sample(features), 3);
+        // Auto Bloccata
+        if (stuck > stuckTime) {
+            float steer = (float) (-sensors.getAngleToTrackAxis() / steerLock);
+            int gear = -1;
+            if (sensors.getAngleToTrackAxis() * sensors.getTrackPosition() > 0) {
+                gear = 1;
+                steer = -steer;
+            }
+            clutch = clutching(sensors, clutch);
+            action.gear = gear;
+            action.steering = steer;
+            action.accelerate = 1.0;
+            action.brake = 0;
+            action.clutch = clutch;
+            System.out.println("Auto bloccata, recupero in corso...");
+        } else {
+            // Estrazione e normalizzazione delle feature
+            double[] features = FeatureNormalizer.extractAndNormalizeFeatures(
+                    trackEdgeSensors,
+                    position,
+                    angle,
+                    speed
+            );
+
+            // Classificazione tramite KNN
+            int predictedClass = knn.classify(new Sample(features), 3);
 
         /*
          * CLASSI
@@ -49,29 +103,38 @@ public class AutonomousDriver extends Controller {
             7 = mantieniVelocita
          */
 
-        // Azione in base alla classe predetta (allineata al dataset semplificato)
-        switch (predictedClass) {
-            case 0: acceleraDritto(action); break;
-            case 1: giraLeggeroSinistra(action); break;
-            case 2: giraForteSinistra(action); break;
-            case 3: giraLeggeroDestra(action); break;
-            case 4: giraForteDestra(action); break;
-            case 5: frena(action); break;
-            case 6: retromarcia(action, sensors); break;
-            default: mantieniVelocita(action); break;
+            // Azione in base alla classe predetta (allineata al dataset semplificato)
+            switch (predictedClass) {
+                case 0:
+                    acceleraDritto(action);
+                    break;
+                case 1:
+                    giraLeggeroSinistra(action);
+                    break;
+                case 2:
+                    giraForteSinistra(action);
+                    break;
+                case 3:
+                    giraLeggeroDestra(action);
+                    break;
+                case 4:
+                    giraForteDestra(action);
+                    break;
+                case 5:
+                    frena(action);
+                    break;
+                case 6:
+                    retromarcia(action, sensors);
+                    break;
+                default:
+                    mantieniVelocita(action);
+                    break;
+            }
+
+
+            // Cambio marcia automatico
+            action.gear = getGear(sensors);
         }
-
-
-        // Cambio marcia automatico
-        action.gear = getGear(sensors);
-
-        // Safety: correzione in caso di uscita di pista
-        if (Math.abs(position) > 0.8) {
-            action.accelerate = 0.2f;
-            action.steering = (position > 0) ? -1.0f : 1.0f;
-            action.brake = 0.3f;
-        }
-
         return action;
     }
 
@@ -90,7 +153,7 @@ public class AutonomousDriver extends Controller {
 
 
     // Azioni di guida semplificate
-// Dritto (accelera)
+    // Dritto (accelera)
     private void acceleraDritto(Action action) {
         action.steering = 0.0;
         action.brake = 0.0;
@@ -135,7 +198,7 @@ public class AutonomousDriver extends Controller {
     // Retromarcia (con correzione angolo)
     private void retromarcia(Action action, SensorModel sensors) {
         action.gear = -1;
-        action.accelerate = 0.3f;
+        action.accelerate = 0.5f;
         action.brake = 0.0;
         // Correggi la direzione in base all'angolo rispetto all'asse della pista
         action.steering = (float) (-sensors.getAngleToTrackAxis() / (Math.PI / 2));
@@ -176,4 +239,28 @@ public class AutonomousDriver extends Controller {
         return angles;
     }
     */
+
+    float clutching(SensorModel sensors, float clutch) {
+        float maxClutch = clutchMax;
+        if (sensors.getCurrentLapTime() < clutchDeltaTime && getStage() == Stage.RACE
+                && sensors.getDistanceRaced() < clutchDeltaRaced)
+            clutch = maxClutch;
+
+        if (clutch > 0) {
+            double delta = clutchDelta;
+            if (sensors.getGear() < 2) {
+                delta /= 2;
+                maxClutch *= clutchMaxModifier;
+                if (sensors.getCurrentLapTime() < clutchMaxTime)
+                    clutch = maxClutch;
+            }
+            clutch = Math.min(maxClutch, clutch);
+            if (clutch != maxClutch) {
+                clutch -= (float) delta;
+                clutch = Math.max((float) 0.0, clutch);
+            } else
+                clutch -= clutchDec;
+        }
+        return clutch;
+    }
 }
