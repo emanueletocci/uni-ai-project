@@ -36,6 +36,7 @@ public class AutonomousDriver extends Controller {
         // Classificazione tramite KNN
         int predictedClass = knn.classify(new Sample(features), 3);
 
+
         /*
          * CLASSI
             0 = acceleraDritto
@@ -46,19 +47,21 @@ public class AutonomousDriver extends Controller {
             5 = frena
             6 = retromarcia
             7 = mantieniVelocita
-         */
-/*if (sensors.getTrackPosition() > 1d) { // Se la vettura è fuori dalla pista dal lato sinistro
+         
+         */   if (sensors.getTrackPosition() > 1d) { // Se la vettura è fuori dalla pista dal lato sinistro
             System.out.println("Fuori pista a sinistra");
 
             // Rientro a destra
-            action.steering = -0.25d;
-            action.accelerate = 0.3d;
+             action.steering = +0.15;
+		action.accelerate = 0.1;
+		action.brake = 0.0;
         } else if (sensors.getTrackPosition() < -1d) { // Se la vettura è fuori dalla pista dal lato destro
             System.out.println("Fuori pista a destra");
 
             // Rientro a sinistra
-            action.steering = 0.25d;
-            action.accelerate = 0.3d;
+            action.steering = -0.15;
+		action.accelerate = 0.1;
+		action.brake = 0.0;
         } else { // In pista*/
         // Azione in base alla classe predetta (allineata al dataset semplificato)
         switch (predictedClass) {
@@ -73,19 +76,22 @@ public class AutonomousDriver extends Controller {
                     action.steering = 0d;
                     action.brake = 0d;; break;
         }
-    //}
+    }
 
     
         // Cambio marcia automatico
         action.gear = getGear(sensors);
 
-     /*    // Safety: correzione in caso di uscita di pista
+       // Safety: correzione in caso di uscita di pista
         if (Math.abs(position) > 0.8) {
             action.accelerate = 0.2f;
-            action.steering = (position > 0) ? -1.0f : 1.0f;
+            action.steering = (position > 0) ? -0.9: 0.9f;
             action.brake = 0.3f;
         }
-*/
+action.brake = filterABS(sensors, (float) action.brake);
+		//con o senza clutching non cambia niente
+        action.clutch = clutching(sensors, (float) action.clutch);			
+
         return action;
     }
 
@@ -98,7 +104,7 @@ public class AutonomousDriver extends Controller {
     private void acceleraDritto(Action action) {
         action.steering = 0.0;
         action.brake = 0.0;
-        action.accelerate = 1.0;
+        action.accelerate = 0.9;
     }
 
     // Gira leggermente a sinistra

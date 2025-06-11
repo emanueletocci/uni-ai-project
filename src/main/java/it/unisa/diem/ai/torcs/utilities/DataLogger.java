@@ -55,7 +55,7 @@ public class DataLogger {
         File file = new File(filename);
 
         // Controllo validità vettore
-        if (featuresVector.length != 12) {
+        if (featuresVector.length != 10) {
             System.err.println("Errore: il vettore delle features deve contenere 12 elementi (9 track, trackPos, angle, speedX).");
             return;
         }
@@ -63,7 +63,7 @@ public class DataLogger {
         // Scrivi header se necessario
         if (!headerLightWritten || !file.exists() || file.length() == 0) {
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename, true))) {
-                for (int i = 0; i < 9; i++) bw.write("track" + i + ";");
+                for (int i = 0; i < 7 ; i++) bw.write("track" + i + ";");
                 bw.write("trackPos;angle;speedX;classLabel\n");
                 headerLightWritten = true;
             } catch (IOException e) {

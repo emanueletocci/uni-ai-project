@@ -43,7 +43,7 @@ public class FeatureNormalizer {
 
     // Metodo di utilità per ottenere il vettore feature normalizzato (12 elementi)
     public static double[] extractAndNormalizeFeatures(double[] track, double trackPos, double angle, double speed) {
-        double[] features = new double[11];
+        double[] features = new double[10];
         double[] normalizedTrack = normalizeTrackSensors(track);
         System.arraycopy(normalizedTrack, 0, features, 0, normalizedTrack.length);
         features[7] = normalizeTrackPosition(trackPos);
@@ -57,11 +57,11 @@ public class FeatureNormalizer {
     public static double[] normalizeExtractedFeatures(double[] extractedFeatures) {
         // Si assume che extractedFeatures contenga già le feature nell'ordine:
         // [sensori_track_normalizzati (9 elementi), trackPos, angle, speed]
-        if (extractedFeatures.length != 12) {
+        if (extractedFeatures.length != 10) {
             throw new IllegalArgumentException("Il vettore di feature deve contenere esattamente 12 elementi.");
         }
 
-        double[] normalizedFeatures = new double[11];
+        double[] normalizedFeatures = new double[10];
 
         System.arraycopy(extractedFeatures, 0, normalizedFeatures, 0, 9);
 
