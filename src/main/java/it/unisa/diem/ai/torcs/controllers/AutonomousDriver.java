@@ -95,37 +95,20 @@ public class AutonomousDriver extends Controller {
             int predictedClass = knn.classify(new Sample(features), 3);
             ClassLabel label = ClassLabel.fromCode(predictedClass);
 
-        /*
-         * CLASSI
-            0 = acceleraDritto
-            1 = giraLeggeroSinistra
-            2 = giraForteSinistra
-            3 = giraLeggeroDestra
-            4 = giraForteDestra
-            5 = frena
-            6 = retromarcia
-            7 = mantieniVelocita
-         */
 
             // Azione in base alla classe predetta (allineata al dataset semplificato)
             switch (label) {
                 case ACCELERA_DRITTO:
                     acceleraDritto(action);
                     break;
-                case GIRA_LEGGERO_SINISTRA:
-                    giraLeggeroSinistra(action);
+                case GIRA_SINISTRA:
+                    giraSinistra(action);
                     break;
-                case GIRA_FORTE_SINISTRA:
-                    giraForteSinistra(action);
-                    break;
-                case GIRA_LEGGERO_DESTRA:
-                    giraLeggeroDestra(action);
-                    break;
-                case GIRA_FORTE_DESTRA:
-                    giraForteDestra(action);
+                case GIRA_DESTRA:
+                    giraDestra(action);
                     break;
                 case FRENA:
-                    frena(action);
+                    frena(action, sensors);
                     break;
                 case RETROMARCIA:
                     retromarcia(action, sensors);
@@ -135,6 +118,7 @@ public class AutonomousDriver extends Controller {
                     mantieniVelocita(action);
                     break;
             }
+
             // Cambio marcia automatico
             action.gear = getGear(sensors);
         }
@@ -191,11 +175,25 @@ public class AutonomousDriver extends Controller {
         action.accelerate = 0.6f;
     }
 
+    // Gira a sinistra (unico metodo)
+    private void giraSinistra(Action action) {
+        action.steering = 0.5f;
+        action.brake = 0.0;
+        action.accelerate = 0.7f;
+    }
+
+    // Gira a destra (unico metodo)
+    private void giraDestra(Action action) {
+        action.steering = -0.5f;
+        action.brake = 0.0;
+        action.accelerate = 0.7f;
+    }
+
     // Frena (dritto)
-    private void frena(Action action) {
+    private void frena(Action action, SensorModel sensors) {
         action.steering = 0.0;
         action.accelerate = 0.0;
-        action.brake = 1.0;
+        action.brake = filterABS(sensors, 1.0f); // Freno con ABS
     }
 
     // Retromarcia (con correzione angolo)
@@ -264,5 +262,23 @@ public class AutonomousDriver extends Controller {
                 clutch -= clutchDec;
         }
         return clutch;
+    }
+
+    private float filterABS(SensorModel sensors, float brake) {
+        float speed = (float) (sensors.getSpeed() / 3.6);
+        if (speed < absMinSpeed)
+            return brake;
+        float slip = 0.0f;
+        for (int i = 0; i < 4; i++) {
+            slip += (float) (sensors.getWheelSpinVelocity()[i] * wheelRadius[i]);
+        }
+        slip = speed - slip / 4.0f;
+        if (slip > absSlip) {
+            brake = brake - (slip - absSlip) / absRange;
+        }
+        if (brake < 0)
+            return 0;
+        else
+            return brake;
     }
 }
