@@ -1,5 +1,7 @@
 package it.unisa.diem.ai.torcs.utilities;
 
+import it.unisa.diem.ai.torcs.model.FeatureType;
+
 public class FeatureNormalizer {
     // Costanti di normalizzazione (devono essere coerenti con AutonomousDriverUtility)
     public static final double MAX_TRACK_VALUE = 200.0;

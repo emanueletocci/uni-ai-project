@@ -1,5 +1,7 @@
 package it.unisa.diem.ai.torcs.utilities;
 
+import it.unisa.diem.ai.torcs.model.FeatureType;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;

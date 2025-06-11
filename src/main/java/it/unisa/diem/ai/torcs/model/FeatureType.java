@@ -1,4 +1,4 @@
-package it.unisa.diem.ai.torcs.utilities;
+package it.unisa.diem.ai.torcs.model;
 
 import java.util.Arrays;
 import java.util.List;

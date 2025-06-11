@@ -1,6 +1,7 @@
 package it.unisa.diem.ai.torcs.controllers;
 
 import it.unisa.diem.ai.torcs.actions.Action;
+import it.unisa.diem.ai.torcs.model.ClassLabel;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
 import it.unisa.diem.ai.torcs.utilities.DataLogger;
 import it.unisa.diem.ai.torcs.utilities.FeatureNormalizer;
@@ -148,32 +149,11 @@ public class SimpleDriver extends Controller {
         double angle = sensors.getAngleToTrackAxis();
         double speedX = sensors.getSpeed();
 
-        int classLabel = calculateClassLabel(action);
+        int classLabel = ClassLabel.calculateLabel(action).getCode();
         double[] features = FeatureNormalizer.extractAndNormalizeFeatures(track, trackPos, angle, speedX);
         logger.log(features, classLabel);
 
         return action;
-    }
-
-    /*
-        0	acceleraDritto	Accelera dritto
-        1	giraLeggeroSinistra	Gira leggermente a sinistra
-        2	giraForteSinistra	Gira forte a sinistra
-        3	giraLeggeroDestra	Gira leggermente a destra
-        4	giraForteDestra	Gira forte a destra
-        5	frena	Frena (dritto)
-        6	retromarcia	Retromarcia
-        7	mantieniVelocita	Nessuna azione / decelerazione
-     */
-    private int calculateClassLabel(Action action) {
-        if (action.gear == -1 && action.accelerate > 0) return 6; // Retromarcia
-        if (action.brake > 0.1) return 5; // Frena
-        if (action.steering >= 0.6f) return 2; // Gira forte a sinistra
-        if (action.steering >= 0.15f) return 1; // Gira leggermente a sinistra
-        if (action.steering <= -0.6f) return 4; // Gira forte a destra
-        if (action.steering <= -0.15f) return 3; // Gira leggermente a destra
-        if (action.accelerate > 0.7f) return 0; // Accelera dritto
-        return 7; // Nessuna azione / decelerazione
     }
 
     private float filterABS(SensorModel sensors, float brake) {

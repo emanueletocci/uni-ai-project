@@ -1,7 +1,7 @@
 package it.unisa.diem.ai.torcs.classifier;
 
 import it.unisa.diem.ai.torcs.Sample;
-import it.unisa.diem.ai.torcs.utilities.FeatureType;
+import it.unisa.diem.ai.torcs.model.FeatureType;
 
 import java.io.*;
 import java.util.*;

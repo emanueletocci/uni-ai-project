@@ -3,6 +3,7 @@ package it.unisa.diem.ai.torcs.controllers;
 import it.unisa.diem.ai.torcs.Sample;
 import it.unisa.diem.ai.torcs.actions.Action;
 import it.unisa.diem.ai.torcs.classifier.NearestNeighbor;
+import it.unisa.diem.ai.torcs.model.ClassLabel;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
 import it.unisa.diem.ai.torcs.utilities.FeatureNormalizer;
 
@@ -92,6 +93,7 @@ public class AutonomousDriver extends Controller {
 
             // Classificazione tramite KNN
             int predictedClass = knn.classify(new Sample(features), 3);
+            ClassLabel label = ClassLabel.fromCode(predictedClass);
 
         /*
          * CLASSI
@@ -106,28 +108,29 @@ public class AutonomousDriver extends Controller {
          */
 
             // Azione in base alla classe predetta (allineata al dataset semplificato)
-            switch (predictedClass) {
-                case 0:
+            switch (label) {
+                case ACCELERA_DRITTO:
                     acceleraDritto(action);
                     break;
-                case 1:
+                case GIRA_LEGGERO_SINISTRA:
                     giraLeggeroSinistra(action);
                     break;
-                case 2:
+                case GIRA_FORTE_SINISTRA:
                     giraForteSinistra(action);
                     break;
-                case 3:
+                case GIRA_LEGGERO_DESTRA:
                     giraLeggeroDestra(action);
                     break;
-                case 4:
+                case GIRA_FORTE_DESTRA:
                     giraForteDestra(action);
                     break;
-                case 5:
+                case FRENA:
                     frena(action);
                     break;
-                case 6:
+                case RETROMARCIA:
                     retromarcia(action, sensors);
                     break;
+                case MANTIENI_VELOCITA:
                 default:
                     mantieniVelocita(action);
                     break;
