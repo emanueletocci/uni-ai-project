@@ -7,8 +7,8 @@ import it.unisa.diem.ai.torcs.sensors.SensorModel;
 import it.unisa.diem.ai.torcs.utilities.FeatureNormalizer;
 
 public class AutonomousDriver extends Controller {
-    final int[] gearUp = { 5000, 6000, 6000, 6500, 7000, 0 };
-    final int[] gearDown = { 0, 2500, 3000, 3000, 3500, 3500 };
+    final int[] gearUp = {5000, 6000, 6000, 6500, 7000, 0};
+    final int[] gearDown = {0, 2500, 3000, 3000, 3500, 3500};
 
     final int stuckTime = 25;
     final float stuckAngle = (float) 0.523598775; // PI/6
@@ -22,7 +22,7 @@ public class AutonomousDriver extends Controller {
     final float steerSensitivityOffset = (float) 80.0;
     final float wheelSensitivityCoeff = 1;
 
-    final float[] wheelRadius = { (float) 0.3179, (float) 0.3179, (float) 0.3276, (float) 0.3276 };
+    final float[] wheelRadius = {(float) 0.3179, (float) 0.3179, (float) 0.3276, (float) 0.3276};
     final float absSlip = (float) 2.0;
     final float absRange = (float) 3.0;
     final float absMinSpeed = (float) 3.0;
@@ -38,7 +38,7 @@ public class AutonomousDriver extends Controller {
 
     private int stuck = 0;
     private float clutch = 0;
-
+    private int cicliRecupero = 0;
     private final NearestNeighbor knn;
     private final Action action;
 
@@ -60,12 +60,14 @@ public class AutonomousDriver extends Controller {
         // Recovery Policy
         if (Math.abs(angle) > stuckAngle) {
             stuck++;
-        } else {
+        } else if (Math.abs(angle) < 0.2 && Math.abs(position) < 1.0 && speed > 5) {
+            // Esci dalla recovery solo se l’auto è ragionevolmente allineata e sulla pista
             stuck = 0;
         }
 
         // Auto Bloccata
         if (stuck > stuckTime) {
+            cicliRecupero++;
             float steer = (float) (-sensors.getAngleToTrackAxis() / steerLock);
             int gear = -1;
             if (sensors.getAngleToTrackAxis() * sensors.getTrackPosition() > 0) {
@@ -78,7 +80,7 @@ public class AutonomousDriver extends Controller {
             action.accelerate = 1.0;
             action.brake = 0;
             action.clutch = clutch;
-            System.out.println("Auto bloccata, recupero in corso...");
+            System.out.println("Auto bloccata, ciclo: " + cicliRecupero);
         } else {
             // Estrazione e normalizzazione delle feature
             double[] features = FeatureNormalizer.extractAndNormalizeFeatures(
@@ -130,8 +132,6 @@ public class AutonomousDriver extends Controller {
                     mantieniVelocita(action);
                     break;
             }
-
-
             // Cambio marcia automatico
             action.gear = getGear(sensors);
         }
@@ -210,7 +210,6 @@ public class AutonomousDriver extends Controller {
         action.brake = 0.0;
         action.steering = 0.0;
     }
-
 
 
     @Override
