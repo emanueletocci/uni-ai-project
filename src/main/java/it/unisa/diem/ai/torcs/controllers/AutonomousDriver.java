@@ -35,7 +35,7 @@ public class AutonomousDriver extends Controller {
         );
 
         // Classificazione tramite KNN
-        int predictedClass = knn.classify(new Sample(features), 5);
+        int predictedClass = knn.classify(new Sample(features), 3);
 
         /*
          * CLASSI

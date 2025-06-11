@@ -1,6 +1,7 @@
 package it.unisa.diem.ai.torcs.classifier;
 
 import it.unisa.diem.ai.torcs.Sample;
+import it.unisa.diem.ai.torcs.utilities.FeatureType;
 
 import java.io.*;
 import java.util.*;
@@ -10,63 +11,36 @@ import java.util.*;
  * per velocizzare la ricerca dei vicini più prossimi.
  */
 public class NearestNeighbor {
+    private final List<Sample> trainingData;
+    private KDTree kdtree;
+    private final int[] classCounts;
 
-    private final List<Sample> trainingData;  // Lista dei dati di addestramento
-    private KDTree kdtree;                    // Albero KD per la ricerca rapida
-    private final int[] classCounts;          // Array per contare le occorrenze di ciascuna classe (0–9)
-
-    /**
-     * Costruttore: inizializza e carica i dati dal file CSV.
-     * @param filename Percorso del file CSV con i dati di training
-     */
     public NearestNeighbor(String filename) {
         this.trainingData = new ArrayList<>();
-        this.kdtree = null;
-        this.classCounts = new int[8];  // Suppone classi etichettate da 0 a 9
+        this.classCounts = new int[FeatureType.values().length]; // prelevo dinamicamente la dimensione
         this.readPointsFromCSV(filename);
     }
 
-    /**
-     * Legge i dati da un file CSV e costruisce la struttura KDTree.
-     */
     private void readPointsFromCSV(String filename) {
+        int expectedFeatures = FeatureType.values().length + 1; // 12 + 1
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
-            // Legge e scarta la prima riga (header)
-            String header = reader.readLine();
-            if (header == null) {
-                System.err.println("File vuoto!");
-                return;
-            }
-
+            reader.readLine(); // Salta header
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.trim().isEmpty()) continue;
+                if (line.trim().isEmpty() || line.contains("track")) continue;
 
-                // Ignora eventuali header ripetuti (in caso di merge di file)
-                if (line.toLowerCase().contains("track0") || line.toLowerCase().contains("classlabel")) {
-                    System.err.println("Salto header ripetuto o riga non dati: " + line);
-                    continue;
-                }
-
-                // Assume che il CSV sia separato da ; e abbia 13 colonne (12 feature + 1 classe)
                 String[] parts = line.split(";");
-                if (parts.length != 13) {
-                    System.err.println("Riga malformata: " + line);
+                if (parts.length != expectedFeatures) {
+                    System.err.println("Riga scartata: " + line);
                     continue;
                 }
 
                 try {
-                    trainingData.add(new Sample(line));  // Costruisce un oggetto Sample da una riga
+                    trainingData.add(new Sample(line));
                 } catch (NumberFormatException e) {
-                    System.err.println("Errore di parsing nella riga: " + line);
+                    System.err.println("Errore in riga: " + line);
                 }
             }
-
-            if (trainingData.isEmpty()) {
-                System.err.println("Nessun dato nel file dopo l'header!");
-            }
-
-            // Costruisce il KDTree con i dati validi
             this.kdtree = new KDTree(trainingData);
         } catch (IOException e) {
             e.printStackTrace();
