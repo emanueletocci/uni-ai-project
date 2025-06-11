@@ -53,14 +53,7 @@ public class SimpleDriver extends Controller {
         System.out.println("Bye bye!");
     }
 
-    private int getGear(SensorModel sensors) {
-        int gear = sensors.getGear();
-        double rpm = sensors.getRPM();
-        if (gear < 1) return 1;
-        if (gear < 6 && rpm >= gearUp[gear - 1]) return gear + 1;
-        if (gear > 1 && rpm <= gearDown[gear - 1]) return gear - 1;
-        return gear;
-    }
+    
 
     private float getSteer(SensorModel sensors) {
         float targetAngle = (float) (sensors.getAngleToTrackAxis() - sensors.getTrackPosition() * 0.5);
@@ -175,59 +168,5 @@ public class SimpleDriver extends Controller {
         return 7; // Nessuna azione / decelerazione
     }
 
-    private float filterABS(SensorModel sensors, float brake) {
-        float speed = (float) (sensors.getSpeed() / 3.6);
-        if (speed < absMinSpeed)
-            return brake;
-        float slip = 0.0f;
-        for (int i = 0; i < 4; i++) {
-            slip += (float) (sensors.getWheelSpinVelocity()[i] * wheelRadius[i]);
-        }
-        slip = speed - slip / 4.0f;
-        if (slip > absSlip) {
-            brake = brake - (slip - absSlip) / absRange;
-        }
-        if (brake < 0)
-            return 0;
-        else
-            return brake;
-    }
 
-    float clutching(SensorModel sensors, float clutch) {
-        float maxClutch = clutchMax;
-        if (sensors.getCurrentLapTime() < clutchDeltaTime && getStage() == Stage.RACE
-                && sensors.getDistanceRaced() < clutchDeltaRaced)
-            clutch = maxClutch;
-
-        if (clutch > 0) {
-            double delta = clutchDelta;
-            if (sensors.getGear() < 2) {
-                delta /= 2;
-                maxClutch *= clutchMaxModifier;
-                if (sensors.getCurrentLapTime() < clutchMaxTime)
-                    clutch = maxClutch;
-            }
-            clutch = Math.min(maxClutch, clutch);
-            if (clutch != maxClutch) {
-                clutch -= (float) delta;
-                clutch = Math.max((float) 0.0, clutch);
-            } else
-                clutch -= clutchDec;
-        }
-        return clutch;
-    }
-
-    public float[] initAngles() {
-        float[] angles = new float[19];
-        for (int i = 0; i < 5; i++) {
-            angles[i] = -90 + i * 15;
-            angles[18 - i] = 90 - i * 15;
-        }
-        for (int i = 5; i < 9; i++) {
-            angles[i] = -20 + (i - 5) * 5;
-            angles[18 - i] = 20 - (i - 5) * 5;
-        }
-        angles[9] = 0;
-        return angles;
-    }
 }

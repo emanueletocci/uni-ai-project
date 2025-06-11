@@ -31,6 +31,11 @@ public class HumanDriver extends Controller {
         Action action = new Action();
         MessageBasedSensorModel model = (MessageBasedSensorModel) sensors;
 
+         if (sensors.getSpeed() > 1 || action.gear != -1d)
+            action.gear = getGear(sensors);
+
+        if (sensors.getSpeed() < 1 || action.gear == -1)
+            action.accelerate = 1d;
         // Lettura sensori principali
         double[] track = model.getTrackEdgeSensors();
         double trackPos = model.getTrackPosition();
@@ -77,17 +82,18 @@ public class HumanDriver extends Controller {
         return action;
     }
 
+/*
+         * CLASSI
+            0 = acceleraDritto
+            1 = giraLeggeroSinistra
+            2 = giraForteSinistra
+            3 = giraLeggeroDestra
+            4 = giraForteDestra
+            5 = frena
+            6 = retromarcia
+            7 = mantieniVelocita
+         */
 
-    /*
-        0	acceleraDritto	Accelera dritto
-        1	giraLeggeroSinistra	Gira leggermente a sinistra
-        2	giraForteSinistra	Gira forte a sinistra
-        3	giraLeggeroDestra	Gira leggermente a destra
-        4	giraForteDestra	Gira forte a destra
-        5	frena	Frena (dritto)
-        6	retromarcia	Retromarcia
-        7	mantieniVelocita	Nessuna azione / decelerazione
-     */
     private int calculateClassLabel(Action action) {
         if (action.gear == -1 && action.accelerate > 0) return 6; // Retromarcia
         if (action.brake > 0.1) return 5; // Frena
@@ -101,17 +107,8 @@ public class HumanDriver extends Controller {
 
 
     // Cambio marcia automatico come da specifica TORCS
-    private int getGear(SensorModel sensors) {
-        final int[] gearUp = {5000, 6000, 6000, 6500, 7000, 0};
-        final int[] gearDown = {0, 2500, 3000, 3000, 3500, 3500};
-        int gear = sensors.getGear();
-        double rpm = sensors.getRPM();
-
-        if (gear < 1) return 1;
-        if (gear < 6 && rpm >= gearUp[gear - 1]) return gear + 1;
-        if (gear > 1 && rpm <= gearDown[gear - 1]) return gear - 1;
-        return gear;
-    }
+    
+    
 
     @Override
     public void reset() {

@@ -3,9 +3,9 @@ package it.unisa.diem.ai.torcs.utilities;
 public class FeatureNormalizer {
     // Costanti di normalizzazione (devono essere coerenti con AutonomousDriverUtility)
     public static final double MAX_TRACK_VALUE = 200.0;
-    public static final double MAX_SPEED = 290.0;
-    public static final double MAX_TRACK_POSITION = 2.0;
-    public static final int[] SENSOR_INDICES = {0, 3, 4, 8, 9, 10, 14, 15, 18};
+    public static final double MAX_SPEED = 310.0;
+    public static final double MAX_TRACK_POSITION = 1.0;
+    public static final int[] SENSOR_INDICES = {4, 6, 8, 9, 10, 12, 14};
     public static final double STEER_LIMIT = 0.8;
 
     private static double normalizzatoreMinMax(double data, double min, double max) {
@@ -14,7 +14,7 @@ public class FeatureNormalizer {
 
     // Normalizza un singolo valore di sensore di bordo pista
     private static double normalizeTrackSensor(double value) {
-        return normalizzatoreMinMax(value, -1.0, MAX_TRACK_VALUE);
+        return normalizzatoreMinMax(value, 0d, MAX_TRACK_VALUE);
     }
 
     // Normalizza tutti i sensori di bordo pista selezionati
@@ -38,17 +38,17 @@ public class FeatureNormalizer {
 
     // Normalizza la velocità
     private static double normalizeSpeed(double value) {
-        return normalizzatoreMinMax(value, 0.0, MAX_SPEED);
+        return normalizzatoreMinMax(value, value<0?-60d:0d, value<0?-0.001d:MAX_SPEED);
     }
 
     // Metodo di utilità per ottenere il vettore feature normalizzato (12 elementi)
     public static double[] extractAndNormalizeFeatures(double[] track, double trackPos, double angle, double speed) {
-        double[] features = new double[12];
+        double[] features = new double[11];
         double[] normalizedTrack = normalizeTrackSensors(track);
         System.arraycopy(normalizedTrack, 0, features, 0, normalizedTrack.length);
-        features[9] = normalizeTrackPosition(trackPos);
-        features[10] = normalizeAngleToTrackAxis(angle);
-        features[11] = normalizeSpeed(speed);
+        features[7] = normalizeTrackPosition(trackPos);
+        features[8] = normalizeAngleToTrackAxis(angle);
+        features[9] = normalizeSpeed(speed);
         return features;
     }
 
@@ -61,14 +61,14 @@ public class FeatureNormalizer {
             throw new IllegalArgumentException("Il vettore di feature deve contenere esattamente 12 elementi.");
         }
 
-        double[] normalizedFeatures = new double[12];
+        double[] normalizedFeatures = new double[11];
 
         System.arraycopy(extractedFeatures, 0, normalizedFeatures, 0, 9);
 
         // Normalizza gli ultimi 3 elementi
-        normalizedFeatures[9] = normalizeTrackPosition(extractedFeatures[9]);
-        normalizedFeatures[10] = normalizeAngleToTrackAxis(extractedFeatures[10]);
-        normalizedFeatures[11] = normalizeSpeed(extractedFeatures[11]);
+        normalizedFeatures[7] = normalizeTrackPosition(extractedFeatures[9]);
+        normalizedFeatures[8] = normalizeAngleToTrackAxis(extractedFeatures[10]);
+        normalizedFeatures[9] = normalizeSpeed(extractedFeatures[11]);
 
         return normalizedFeatures;
     }

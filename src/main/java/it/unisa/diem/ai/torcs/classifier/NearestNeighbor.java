@@ -50,7 +50,7 @@ public class NearestNeighbor {
 
                 // Assume che il CSV sia separato da ; e abbia 13 colonne (12 feature + 1 classe)
                 String[] parts = line.split(";");
-                if (parts.length != 13) {
+                if (parts.length != 12) {
                     System.err.println("Riga malformata: " + line);
                     continue;
                 }
