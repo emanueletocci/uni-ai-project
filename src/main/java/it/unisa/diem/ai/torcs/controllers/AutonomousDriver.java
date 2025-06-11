@@ -7,7 +7,7 @@ import it.unisa.diem.ai.torcs.model.ClassLabel;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
 import it.unisa.diem.ai.torcs.utilities.FeatureNormalizer;
 
-public class AutonomousDriver extends Controller {
+public class AutonomousDriver extends BaseDriver {
     final int[] gearUp = {5000, 6000, 6000, 6500, 7000, 0};
     final int[] gearDown = {0, 2500, 3000, 3000, 3500, 3500};
 
@@ -125,19 +125,6 @@ public class AutonomousDriver extends Controller {
         return action;
     }
 
-    // Cambio marcia automatico
-    private int getGear(SensorModel sensors) {
-        final int[] gearUp = {5000, 6000, 6000, 6500, 7000, 0};
-        final int[] gearDown = {0, 2500, 3000, 3000, 3500, 3500};
-        int gear = sensors.getGear();
-        double rpm = sensors.getRPM();
-
-        if (gear < 1) return 1;
-        if (gear < 6 && rpm >= gearUp[gear - 1]) return gear + 1;
-        if (gear > 1 && rpm <= gearDown[gear - 1]) return gear - 1;
-        return gear;
-    }
-
 
     // Azioni di guida semplificate
     // Dritto (accelera)
@@ -213,16 +200,6 @@ public class AutonomousDriver extends Controller {
     }
 
 
-    @Override
-    public void reset() {
-        System.out.println("Restarting the race!");
-    }
-
-    @Override
-    public void shutdown() {
-        System.out.println("Bye bye!");
-    }
-
     /*
     @Override
     public float[] initAngles() {
@@ -240,45 +217,4 @@ public class AutonomousDriver extends Controller {
     }
     */
 
-    float clutching(SensorModel sensors, float clutch) {
-        float maxClutch = clutchMax;
-        if (sensors.getCurrentLapTime() < clutchDeltaTime && getStage() == Stage.RACE
-                && sensors.getDistanceRaced() < clutchDeltaRaced)
-            clutch = maxClutch;
-
-        if (clutch > 0) {
-            double delta = clutchDelta;
-            if (sensors.getGear() < 2) {
-                delta /= 2;
-                maxClutch *= clutchMaxModifier;
-                if (sensors.getCurrentLapTime() < clutchMaxTime)
-                    clutch = maxClutch;
-            }
-            clutch = Math.min(maxClutch, clutch);
-            if (clutch != maxClutch) {
-                clutch -= (float) delta;
-                clutch = Math.max((float) 0.0, clutch);
-            } else
-                clutch -= clutchDec;
-        }
-        return clutch;
-    }
-
-    private float filterABS(SensorModel sensors, float brake) {
-        float speed = (float) (sensors.getSpeed() / 3.6);
-        if (speed < absMinSpeed)
-            return brake;
-        float slip = 0.0f;
-        for (int i = 0; i < 4; i++) {
-            slip += (float) (sensors.getWheelSpinVelocity()[i] * wheelRadius[i]);
-        }
-        slip = speed - slip / 4.0f;
-        if (slip > absSlip) {
-            brake = brake - (slip - absSlip) / absRange;
-        }
-        if (brake < 0)
-            return 0;
-        else
-            return brake;
-    }
 }

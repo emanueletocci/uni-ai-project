@@ -10,39 +10,7 @@ import it.unisa.diem.ai.torcs.utilities.KeyInput;
 import it.unisa.diem.ai.torcs.utilities.FeatureNormalizer;
 import javax.swing.*;
 
-public class HumanDriver extends Controller {
-    final int[] gearUp = { 5000, 6000, 6000, 6500, 7000, 0 };
-    final int[] gearDown = { 0, 2500, 3000, 3000, 3500, 3500 };
-
-    final int stuckTime = 25;
-    final float stuckAngle = (float) 0.523598775; // PI/6
-
-    final float maxSpeedDist = 70;
-    final float maxSpeed = 150;
-    final float sin5 = (float) 0.08716;
-    final float cos5 = (float) 0.99619;
-
-    final float steerLock = (float) 0.785398;
-    final float steerSensitivityOffset = (float) 80.0;
-    final float wheelSensitivityCoeff = 1;
-
-    final float[] wheelRadius = { (float) 0.3179, (float) 0.3179, (float) 0.3276, (float) 0.3276 };
-    final float absSlip = (float) 2.0;
-    final float absRange = (float) 3.0;
-    final float absMinSpeed = (float) 3.0;
-
-    final float clutchMax = (float) 0.5;
-    final float clutchDelta = (float) 0.05;
-    final float clutchRange = (float) 0.82;
-    final float clutchDeltaTime = (float) 0.02;
-    final float clutchDeltaRaced = 10;
-    final float clutchDec = (float) 0.01;
-    final float clutchMaxModifier = (float) 1.3;
-    final float clutchMaxTime = (float) 1.5;
-
-    private int stuck = 0;
-    private float clutch = 0;
-
+public class HumanDriver extends BaseDriver {
     static {
         SwingUtilities.invokeLater(ContinuousCharReaderUI::new);
     }
@@ -111,19 +79,6 @@ public class HumanDriver extends Controller {
         return action;
     }
 
-    // Cambio marcia automatico come da specifica TORCS
-    private int getGear(SensorModel sensors) {
-        final int[] gearUp = {5000, 6000, 6000, 6500, 7000, 0};
-        final int[] gearDown = {0, 2500, 3000, 3000, 3500, 3500};
-        int gear = sensors.getGear();
-        double rpm = sensors.getRPM();
-
-        if (gear < 1) return 1;
-        if (gear < 6 && rpm >= gearUp[gear - 1]) return gear + 1;
-        if (gear > 1 && rpm <= gearDown[gear - 1]) return gear - 1;
-        return gear;
-    }
-
     /*
      * DISPOSIZIONE DEI SENSORI DI BORDO PISTA (track edge sensors):
      *
@@ -173,31 +128,4 @@ public class HumanDriver extends Controller {
         return angles;
     }
     */
-    @Override
-    public void reset() {
-        System.out.println("Resetto");
-    }
-
-    @Override
-    public void shutdown() {
-        System.out.println("Registrazione completata su file CSV.");
-    }
-
-    private float filterABS(SensorModel sensors, float brake) {
-        float speed = (float) (sensors.getSpeed() / 3.6);
-        if (speed < absMinSpeed)
-            return brake;
-        float slip = 0.0f;
-        for (int i = 0; i < 4; i++) {
-            slip += (float) (sensors.getWheelSpinVelocity()[i] * wheelRadius[i]);
-        }
-        slip = speed - slip / 4.0f;
-        if (slip > absSlip) {
-            brake = brake - (slip - absSlip) / absRange;
-        }
-        if (brake < 0)
-            return 0;
-        else
-            return brake;
-    }
 }
