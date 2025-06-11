@@ -23,6 +23,7 @@ public class HumanDriver extends Controller {
     private static final float STEER_SOFT_RIGHT = -0.4f;
 
     public HumanDriver() {
+        super();
         logger = new DataLogger("data/dataset.csv");
     }
 
@@ -32,6 +33,7 @@ public class HumanDriver extends Controller {
         MessageBasedSensorModel model = (MessageBasedSensorModel) sensors;
 
         // Lettura sensori principali
+        // Estraggo tutti i e 19 i sensori di bordo pista
         double[] track = model.getTrackEdgeSensors();
         double trackPos = model.getTrackPosition();
         double angle = model.getAngleToTrackAxis();
@@ -113,6 +115,55 @@ public class HumanDriver extends Controller {
         return gear;
     }
 
+    /*
+     * DISPOSIZIONE DEI SENSORI DI BORDO PISTA (track edge sensors):
+     *
+     * Ogni sensore misura la distanza tra il veicolo e il bordo della pista in una specifica direzione,
+     * espressa come angolo (in gradi) rispetto all’asse longitudinale dell’auto.
+     * La seguente disposizione (custom) concentra più sensori vicino all’asse centrale e agli estremi,
+     * aumentando la risoluzione dove la percezione è più critica per la guida autonoma.
+     *
+     * Indice   Angolo (gradi)
+     *   0        -90
+     *   1        -75
+     *   2        -60
+     *   3        -45
+     *   4        -30
+     *   5        -20
+     *   6        -15
+     *   7        -10
+     *   8         -5
+     *   9          0   (davanti all’auto)
+     *  10         +5
+     *  11        +10
+     *  12        +15
+     *  13        +20
+     *  14        +30
+     *  15        +45
+     *  16        +60
+     *  17        +75
+     *  18        +90
+     *
+     * Nota: questa configurazione NON è la standard di TORCS (che prevede 19 sensori da -90° a +90° con passo 10°),
+     * ma è una scelta personalizzata che permette maggiore precisione nelle zone più rilevanti per la traiettoria.
+     */
+
+    /*
+    @Override
+    public float[] initAngles() {
+        float[] angles = new float[19];
+        for (int i = 0; i < 5; i++) {
+            angles[i] = -90 + i * 15;
+            angles[18 - i] = 90 - i * 15;
+        }
+        for (int i = 5; i < 9; i++) {
+            angles[i] = -20 + (i - 5) * 5;
+            angles[18 - i] = 20 - (i - 5) * 5;
+        }
+        angles[9] = 0;
+        return angles;
+    }
+    */
     @Override
     public void reset() {
         System.out.println("Resetto");

@@ -42,6 +42,7 @@ public class SimpleDriver extends Controller {
     private final DataLogger logger;
 
     public SimpleDriver() {
+        super();
         logger = new DataLogger("data/dataset.csv");
     }
 
@@ -217,6 +218,8 @@ public class SimpleDriver extends Controller {
         return clutch;
     }
 
+    /*
+    @Override
     public float[] initAngles() {
         float[] angles = new float[19];
         for (int i = 0; i < 5; i++) {
@@ -230,4 +233,6 @@ public class SimpleDriver extends Controller {
         angles[9] = 0;
         return angles;
     }
+
+     */
 }

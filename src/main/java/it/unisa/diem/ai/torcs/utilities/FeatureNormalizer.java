@@ -5,8 +5,12 @@ public class FeatureNormalizer {
     public static final double MAX_TRACK_VALUE = 200.0;
     public static final double MAX_SPEED = 290.0;
     public static final double MAX_TRACK_POSITION = 2.0;
-    public static final int[] SENSOR_INDICES = {0, 3, 4, 8, 9, 10, 14, 15, 18};
-    public static final double STEER_LIMIT = 0.8;
+
+    // Ottiene gli indici dei sensori dall'enum FeatureType
+    public static final int[] SENSOR_INDICES = FeatureType.getTrackSensorIndices()
+            .stream()
+            .mapToInt(Integer::intValue)
+            .toArray();
 
     private static double normalizzatoreMinMax(double data, double min, double max) {
         return (data - min) / (max - min);
@@ -57,7 +61,7 @@ public class FeatureNormalizer {
     public static double[] normalizeExtractedFeatures(double[] extractedFeatures) {
         // Si assume che extractedFeatures contenga già le feature nell'ordine:
         // [sensori_track_normalizzati (9 elementi), trackPos, angle, speed]
-        if (extractedFeatures.length != 12) {
+        if (extractedFeatures.length != FeatureType.values().length) {
             throw new IllegalArgumentException("Il vettore di feature deve contenere esattamente 12 elementi.");
         }
 

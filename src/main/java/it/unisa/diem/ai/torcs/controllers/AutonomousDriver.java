@@ -13,6 +13,7 @@ public class AutonomousDriver extends Controller {
 
     public AutonomousDriver() {
         // Percorso del dataset da behavioral cloning
+        super();
         knn = new NearestNeighbor("data/dataset.csv");
         action = new Action();
     }
@@ -159,6 +160,7 @@ public class AutonomousDriver extends Controller {
         System.out.println("Bye bye!");
     }
 
+    /*
     @Override
     public float[] initAngles() {
         float[] angles = new float[19];
@@ -173,4 +175,5 @@ public class AutonomousDriver extends Controller {
         angles[9] = 0;
         return angles;
     }
+    */
 }
