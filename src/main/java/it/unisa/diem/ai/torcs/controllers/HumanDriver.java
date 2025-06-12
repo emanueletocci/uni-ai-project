@@ -64,8 +64,9 @@ public class HumanDriver extends BaseDriver {
 
         if (isOffTrack(trackPos)) {
             giriFuoriPista++;
-            System.out.println("🚨 ATTENZIONE: Auto fuori pista! Giro: : " + giriFuoriPista);
         }
+
+        detectSensorAnomalies(track, trackPos);
 
         return action;
     }

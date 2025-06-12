@@ -21,20 +21,9 @@ import javax.swing.*;
 public class AutonomousDriver extends BaseDriver {
     /** Classificatore KNN per la scelta dell'azione di guida. */
     private final NearestNeighbor knn;
-    /** Oggetto Action che rappresenta l'azione corrente da eseguire. */
-    private final Action action;
-    /** Contatore dei giri completati fuori pista (per debug/statistiche). */
-    private int giriFuoriPista = 0;
 
-    // Parametri per la logica di recupero
     /** Contatore dei cicli consecutivi in cui l'auto è bloccata. */
     private int stuckCounter = 0;
-    /** Numero massimo di cicli prima di attivare la procedura di recupero avanzata. */
-    private static final int MAX_STUCK_CYCLES = 40;
-    /** Soglia dell'angolo (in radianti) oltre la quale l'auto è considerata bloccata. */
-    private static final double STUCK_ANGLE = Math.PI / 4; // 45 gradi
-    /** Soglia della velocità (in m/s) sotto la quale l'auto è considerata bloccata. */
-    private static final double STUCK_SPEED = 5.0;
 
     /** Visualizzatore radar per il debug dei sensori. */
     private static final RadarVisualizer radar = new RadarVisualizer();
@@ -50,7 +39,6 @@ public class AutonomousDriver extends BaseDriver {
     public AutonomousDriver() {
         super();
         knn = new NearestNeighbor("data/dataset.csv");
-        action = new Action();
     }
 
     /**
@@ -65,14 +53,26 @@ public class AutonomousDriver extends BaseDriver {
      */
     @Override
     public Action control(SensorModel sensors) {
-        if (isStuck(sensors)) {
+        double[] trackEdgeSensors = sensors.getTrackEdgeSensors();
+        double trackPosition = sensors.getTrackPosition();
+
+        if (Math.abs(sensors.getAngleToTrackAxis()) > stuckAngle) {
+            stuck++;
+        } else {
+            stuck = 0;
+        }
+        // Auto Bloccata: se il contatore supera la soglia, attiva il recupero
+        if(stuck > stuckTime) {
             return handleRecovery(sensors);
         }
-        if (isOffTrack(sensors.getTrackPosition())) {
-            return handleOffTrack(sensors);
+
+        if(detectSensorAnomalies(trackEdgeSensors,trackPosition) || isOffTrack(trackPosition)) {
+            return alignToCenter(sensors);
         }
-        return normalDriving(sensors);
+
+        return knnDriving(sensors);
     }
+
 
     /**
      * Gestisce la logica di recupero avanzata in caso di blocco.
@@ -83,27 +83,22 @@ public class AutonomousDriver extends BaseDriver {
      * @return L'azione correttiva da eseguire.
      */
     private Action handleRecovery(SensorModel sensors) {
-        stuckCounter++;
-        Action recoveryAction = new Action();
-
+        Action action = new Action();
         // Esempio: attiva la recovery se il contatore supera la soglia
-        if (stuckCounter > MAX_STUCK_CYCLES) {
-            System.out.println("⚠️ Attivazione procedura di recupero avanzata");
-            float steerLock = 1.0f; // Valore da calibrare in base al veicolo
-            float steer = (float) (-sensors.getAngleToTrackAxis() / steerLock);
-            int gear = -1; // retromarcia
-            if (sensors.getAngleToTrackAxis() * sensors.getTrackPosition() > 0) {
-                gear = 1; // prima marcia se orientato correttamente
-                steer = -steer;
-            }
-            float clutch = 0; // Da gestire in base alla funzione clutching
-            recoveryAction.gear = gear;
-            recoveryAction.steering = steer;
-            recoveryAction.accelerate = 1.0;
-            recoveryAction.brake = 0.0;
-            recoveryAction.clutch = clutch;
+        float steer = (float) (-sensors.getAngleToTrackAxis() / steerLock);
+        int gear = -1;
+        if (sensors.getAngleToTrackAxis() * sensors.getTrackPosition() > 0) {
+            gear = 1;
+            steer = -steer;
         }
-        return recoveryAction;
+        clutch = clutching(sensors, clutch);
+        action.gear = gear;
+        action.steering = steer;
+        action.accelerate = 1.0;
+        action.brake = 0;
+        action.clutch = clutch;
+
+        return action;
     }
 
     /**
@@ -113,18 +108,19 @@ public class AutonomousDriver extends BaseDriver {
      * @param sensors Il modello sensoriale corrente.
      * @return L'azione di correzione da eseguire.
      */
-    private Action handleOffTrack(SensorModel sensors) {
+    private Action alignToCenter(SensorModel sensors) {
+        Action action = new Action();
         double position = sensors.getTrackPosition(); // 0: centro, -1: bordo destro, +1: bordo sinistro
         double angle = sensors.getAngleToTrackAxis(); // angolo rispetto all'asse pista
 
         // Calcola una correzione proporzionale a posizione e angolo
-        double correction = -position * 0.5 - angle * 0.7;
+        double correction = -position * 0.3 - angle * 0.5;
         correction = Math.max(-1, Math.min(1, correction)); // Normalizza tra -1 e 1
 
         action.steering = correction;
         action.accelerate = 0.3;
         action.brake = 0.0;
-        action.gear = sensors.getGear() > 1 ? 1 : sensors.getGear();
+        action.gear = sensors.getGear();
         action.clutch = 0;
         return action;
     }
@@ -136,7 +132,8 @@ public class AutonomousDriver extends BaseDriver {
      * @param sensors Il modello sensoriale corrente.
      * @return L'azione da eseguire secondo la logica di guida standard.
      */
-    private Action normalDriving(SensorModel sensors) {
+    private Action knnDriving(SensorModel sensors) {
+        Action action = new Action();
         stuckCounter = 0;
 
         // Lettura sensori principali
@@ -185,25 +182,8 @@ public class AutonomousDriver extends BaseDriver {
                 break;
         }
 
-        if (isOffTrack(position)) {
-            giriFuoriPista++;
-            System.out.println("🚨 ATTENZIONE: Auto fuori pista! Giro: " + giriFuoriPista);
-        }
-
         // Cambio marcia automatico
         action.gear = getGear(sensors);
         return action;
-    }
-
-    /**
-     * Determina se il veicolo è bloccato in base all'angolo rispetto all'asse pista
-     * e alla velocità longitudinale.
-     *
-     * @param sensors Il modello sensoriale corrente.
-     * @return true se il veicolo è considerato bloccato, false altrimenti.
-     */
-    private boolean isStuck(SensorModel sensors) {
-        return Math.abs(sensors.getAngleToTrackAxis()) > STUCK_ANGLE &&
-                sensors.getSpeed() < STUCK_SPEED;
     }
 }

@@ -1,6 +1,8 @@
 package it.unisa.diem.ai.torcs.controllers;
 import it.unisa.diem.ai.torcs.Action;
+import it.unisa.diem.ai.torcs.model.FeatureType;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
+import java.util.List;
 
 public abstract class BaseDriver extends Controller{
     final int[] gearUp = { 5000, 6000, 6000, 6500, 7000, 0 };
@@ -36,9 +38,9 @@ public abstract class BaseDriver extends Controller{
     static final float FRENATA = 0.7f;
     static final float ACCELERAZIONE = 1f;
 
-
     int stuck = 0;
     float clutch = 0;
+    int anomalyCounter = 0;
 
     public BaseDriver() {
         super();
@@ -131,27 +133,6 @@ public abstract class BaseDriver extends Controller{
     }
 
     @Override
-    public float[] initAngles() {
-        float[] angles = new float[19];
-
-        /*
-         * set angles as
-         * {-90,-75,-60,-45,-30,-20,-15,-10,-5,0,5,10,15,20,30,45,60,75,90}
-         */
-        for (int i = 0; i < 5; i++) {
-            angles[i] = -90 + i * 15;
-            angles[18 - i] = 90 - i * 15;
-        }
-
-        for (int i = 5; i < 9; i++) {
-            angles[i] = -20 + (i - 5) * 5;
-            angles[18 - i] = 20 - (i - 5) * 5;
-        }
-        angles[9] = 0;
-        return angles;
-    }
-
-    @Override
     public void reset() {
         System.out.println("Restarting the race!");
     }
@@ -207,6 +188,37 @@ public abstract class BaseDriver extends Controller{
      */
     boolean isOffTrack(double trackPos) {
         return Math.abs(trackPos) > 1.1;
+    }
+
+    /**
+     * Rileva se i sensori selezionati presentano valori anomali e notifica immediatamente.
+     *
+     * @param trackEdgeSensors Array completo dei sensori di bordo pista.
+     * @param trackPosition Posizione laterale dell'auto rispetto al centro pista.
+     * @return true se sono rilevate anomalie nei sensori selezionati, false altrimenti.
+     */
+    boolean detectSensorAnomalies(double[] trackEdgeSensors, double trackPosition) {
+        List<Integer> indices = FeatureType.getTrackSensorIndices();
+        boolean anyAnomaly = false;
+
+        // Controlla ogni sensore individualmente e notifica immediatamente
+        for (int idx : indices) {
+            double value = trackEdgeSensors[idx];
+            if (value <= 0 || value > 200) {
+                System.out.println("⚠️ ALLARME: Sensore " + idx + " non funzionante! Valore: " + value);
+                anyAnomaly = true;
+            }
+        }
+
+        // Se siamo ancora in pista ma ci sono anomalie, incrementa il contatore globale
+        boolean stillOnTrack = (trackPosition > -0.9 && trackPosition < 0.9);
+        if (anyAnomaly && stillOnTrack) {
+            anomalyCounter++;
+            System.out.println("🔧 Totale anomalie rilevate: " + anomalyCounter);
+            return true;
+        }
+
+        return false;
     }
 
 }
