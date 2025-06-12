@@ -1,4 +1,4 @@
-package it.unisa.diem.ai.torcs.controllers;
+/*package it.unisa.diem.ai.torcs.controllers;
 
 import it.unisa.diem.ai.torcs.model.ClassLabel;
 import it.unisa.diem.ai.torcs.sensors.MessageBasedSensorModel;
@@ -128,4 +128,4 @@ public class HumanDriver extends BaseDriver {
         return angles;
     }
     */
-}
+//}

@@ -1,11 +1,16 @@
 package it.unisa.diem.ai.torcs.utilities;
 
+import it.unisa.diem.ai.torcs.Sample;
 import it.unisa.diem.ai.torcs.model.FeatureType;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * DataLogger che scrive l'header una sola volta, solo alla creazione del file.
@@ -37,16 +42,10 @@ public class DataLogger {
     /**
      * Logga un vettore di feature (ordine: FeatureType.values()) e la classe.
      */
-    public void log(double[] featuresVector, int classLabel) {
-        if (featuresVector.length != FeatureType.values().length) {
-            System.err.println("Errore: il vettore delle feature deve contenere " + FeatureType.values().length + " elementi.");
-            return;
-        }
+    public void log(String data) {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename, true))) {
-            for (double v : featuresVector) {
-                bw.write(v + ";");
-            }
-            bw.write(classLabel + "\n");
+             bw.append(data);
+            bw.append("\n");
         } catch (IOException e) {
             System.err.println("Errore scrittura CSV: " + e.getMessage());
         }

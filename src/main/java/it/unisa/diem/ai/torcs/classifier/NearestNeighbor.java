@@ -16,36 +16,32 @@ public class NearestNeighbor {
     private final int[] classCounts;
 
     public NearestNeighbor(String filename) {
-        this.trainingData = new ArrayList<>();
-        this.classCounts = new int[FeatureType.values().length]; // prelevo dinamicamente la dimensione
-        this.readPointsFromCSV(filename);
-    }
+    this.classCounts = new int[FeatureType.values().length];
+    this.trainingData = readTrainingData(filename);
+    this.kdtree = new KDTree(trainingData);
+}
 
-    private void readPointsFromCSV(String filename) {
-        int expectedFeatures = FeatureType.values().length + 1; // 12 + 1
-        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
-            reader.readLine(); // Salta header
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.trim().isEmpty() || line.contains("track")) continue;
+    private List<Sample> readTrainingData(String filename) {
+    List<Sample> data = new ArrayList<>();
 
-                String[] parts = line.split(";");
-                if (parts.length != expectedFeatures) {
-                    System.err.println("Riga scartata: " + line);
-                    continue;
-                }
-
-                try {
-                    trainingData.add(new Sample(line));
-                } catch (NumberFormatException e) {
-                    System.err.println("Errore in riga: " + line);
-                }
+    try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (line.startsWith(FeatureType.getCSVHeader())) {
+                continue; //salto header
             }
-            this.kdtree = new KDTree(trainingData);
-        } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                data.add(Sample.fromString(line)); // o DataSample.fromString(line)
+            } catch (NumberFormatException ignore) {
+                System.err.println("Linea ignorata: " + line);
+            }
         }
+    } catch (IOException e) {
+        e.printStackTrace();
     }
+
+    return data;
+}
 
     /**
      * Trova i K vicini più prossimi a un punto dato.
@@ -60,15 +56,17 @@ public class NearestNeighbor {
     public int classify(Sample testPoint, int k) {
         List<Sample> kNearestNeighbors = findKNearestNeighbors(testPoint, k);
 
-        // Azzera il conteggio delle classi
-        Arrays.fill(classCounts, 0);
-
-        // Conta quante volte compare ogni classe nei vicini
-        for (Sample neighbor : kNearestNeighbors) {
-            classCounts[neighbor.cls]++;
+        // Reset class counts
+        for (int i = 0; i < classCounts.length; i++) {
+            classCounts[i] = 0;
         }
 
-        // Trova la classe più frequente (maggioranza)
+        // Count the occurrences of each class in the k nearest neighbors
+        for (Sample neighbor : kNearestNeighbors) {
+            classCounts[neighbor.dataClass]++;
+        }
+
+        // Find the class with the maximum count
         int maxCount = -1;
         int predictedClass = -1;
         for (int i = 0; i < classCounts.length; i++) {

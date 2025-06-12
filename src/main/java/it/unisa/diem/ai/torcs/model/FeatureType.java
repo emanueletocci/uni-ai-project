@@ -14,71 +14,27 @@ import java.util.stream.Collectors;
  * normalizzatore e agenti di guida.
  */
 public enum FeatureType {
- SPEED,
-TRACK_POSITION,
-TRACK_EDGE_SENSOR_4(4),
-TRACK_EDGE_SENSOR_6(6),
-TRACK_EDGE_SENSOR_8(8),
-TRACK_EDGE_SENSOR_9(9),
-TRACK_EDGE_SENSOR_10(10),
-TRACK_EDGE_SENSOR_12(12),
-TRACK_EDGE_SENSOR_14(14),
-ANGLE_TO_TRACK_AXIS;
+     SPEED,
+    ANGLE_TO_TRACK_AXIS,
+    TRACK_POSITION,
+    TRACK_EDGE_SENSORS_4,
+    TRACK_EDGE_SENSORS_6,
+    TRACK_EDGE_SENSORS_8,
+    TRACK_EDGE_SENSORS_9,
+    TRACK_EDGE_SENSORS_10,
+    TRACK_EDGE_SENSORS_12,
+    TRACK_EDGE_SENSORS_14;
 
-
-    private final Integer trackIndex;
-
-    /**
-     * Costruttore per le feature senza indice di sensore (feature generali).
-     */
-    FeatureType() {
-        this.trackIndex = null;
-    }
-
-    /**
-     * Costruttore per le feature relative ai sensori di bordo pista.
-     *
-     * @param trackIndex indice del sensore di bordo pista nel vettore track[]
-     */
-    FeatureType(int trackIndex) {
-        this.trackIndex = trackIndex;
-    }
-
-    /**
-     * Restituisce l'indice del sensore di bordo pista associato alla feature,
-     * oppure null se la feature non è un sensore di bordo pista.
-     *
-     * @return indice del sensore di bordo pista, o null se non applicabile
-     */
-    public Integer getTrackIndex() {
-        return trackIndex;
-    }
-
-    /**
-     * Restituisce la lista degli indici dei sensori di bordo pista selezionati
-     * tra le feature di tipo TRACK_EDGE_SENSOR.
-     *
-     * @return lista di indici interi dei sensori di bordo pista
-     */
-    public static List<Integer> getTrackSensorIndices() {
-        return Arrays.stream(values())
-                .filter(f -> f.trackIndex != null)
-                .map(FeatureType::getTrackIndex)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Genera l'header CSV corrispondente alle feature definite nell'enum,
-     * aggiungendo il campo "CLASS" per la label di classificazione.
-     *
-     * @return stringa contenente l'header CSV separato da punto e virgola
-     */
     public static String getCSVHeader() {
         StringJoiner joiner = new StringJoiner(";");
-        for (FeatureType f : values()) {
-            joiner.add(f.name());
+
+        for (int i = 0; i < FeatureType.values().length; i++) {
+            joiner.add(FeatureType.values()[i].name());
         }
+
         joiner.add("CLASS");
+
         return joiner.toString();
     }
+
 }
