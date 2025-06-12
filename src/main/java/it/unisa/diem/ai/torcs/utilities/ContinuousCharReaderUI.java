@@ -36,8 +36,6 @@ public class ContinuousCharReaderUI extends JFrame {
                     case 'd': KeyInput.right = true; break;
                     case KeyEvent.VK_SPACE: KeyInput.brake = true; break;
                 }
-                System.out.println("Pressed: " + e.getKeyChar());
-                System.out.println("Key state → W: " + KeyInput.up + " | A: " + KeyInput.left + " | S: " + KeyInput.down + " | D: " + KeyInput.right);
             }
 
             @Override
@@ -50,8 +48,6 @@ public class ContinuousCharReaderUI extends JFrame {
                     case KeyEvent.VK_SPACE: KeyInput.brake = false; break;
 
                 }
-                System.out.println("Pressed: " + e.getKeyChar());
-                System.out.println("Key state → W: " + KeyInput.up + " | A: " + KeyInput.left + " | S: " + KeyInput.down + " | D: " + KeyInput.right);
             }
         });
 

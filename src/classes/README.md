@@ -1,1 +1,0 @@
-Questa cartella contiene  le classi compilate manualmente dallo script

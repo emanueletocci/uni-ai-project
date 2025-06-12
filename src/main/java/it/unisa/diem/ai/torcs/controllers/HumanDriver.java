@@ -1,7 +1,6 @@
 package it.unisa.diem.ai.torcs.controllers;
 
 import it.unisa.diem.ai.torcs.model.ClassLabel;
-import it.unisa.diem.ai.torcs.sensors.MessageBasedSensorModel;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
 import it.unisa.diem.ai.torcs.Action;
 import it.unisa.diem.ai.torcs.utilities.ContinuousCharReaderUI;
@@ -30,16 +29,15 @@ public class HumanDriver extends BaseDriver {
     @Override
     public Action control(SensorModel sensors) {
         Action action = new Action();
-        MessageBasedSensorModel model = (MessageBasedSensorModel) sensors;
 
         // Lettura sensori principali
         // Estraggo tutti i e 19 i sensori di bordo pista
-        double[] track = model.getTrackEdgeSensors();
-        double trackPos = model.getTrackPosition();
-        double angle = model.getAngleToTrackAxis();
-        double speedX = model.getSpeed();
-        double speedY = model.getLateralSpeed();
-        int gear = model.getGear();
+        double[] track = sensors.getTrackEdgeSensors();
+        double trackPos = sensors.getTrackPosition();
+        double angle = sensors.getAngleToTrackAxis();
+        double speedX = sensors.getSpeed();
+        double speedY = sensors.getLateralSpeed();
+        int gear = sensors.getGear();
 
         // Gestione manuale: acceleratore (W), freno (Space), retromarcia (S), sterzo (A/D)
         if (KeyInput.brake) { // Space
@@ -77,23 +75,22 @@ public class HumanDriver extends BaseDriver {
         double[] features = FeatureNormalizer.extractAndNormalizeFeatures(track, trackPos, angle, speedX, speedY);
         logger.log(features, classLabel);
 
+        if (isOffTrack(trackPos)) {
+            System.out.println("🚨 ATTENZIONE: Auto fuori pista!");
+        }
+
         return action;
     }
 
-    /*
-    @Override
-    public float[] initAngles() {
-        float[] angles = new float[19];
-        for (int i = 0; i < 5; i++) {
-            angles[i] = -90 + i * 15;
-            angles[18 - i] = 90 - i * 15;
-        }
-        for (int i = 5; i < 9; i++) {
-            angles[i] = -20 + (i - 5) * 5;
-            angles[18 - i] = 20 - (i - 5) * 5;
-        }
-        angles[9] = 0;
-        return angles;
+    /**
+     * Restituisce true se l'auto è fuori pista, ovvero se il valore assoluto della posizione
+     * rispetto al centro della pista è maggiore di 1.0.
+     *
+     * @param trackPos posizione dell'auto rispetto al centro pista (in [-inf, +inf])
+     * @return true se l'auto è fuori pista
+     */
+    private boolean isOffTrack(double trackPos) {
+        return Math.abs(trackPos) > 1.0;
     }
-    */
+
 }

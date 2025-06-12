@@ -42,7 +42,7 @@ public class NearestNeighbor {
             reader.readLine(); // Ignora header
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.trim().isEmpty() || line.contains("track")) continue;
+                if (line.trim().isEmpty()) continue;
 
                 String[] parts = line.split(";");
                 if (parts.length != expectedFeatures) {

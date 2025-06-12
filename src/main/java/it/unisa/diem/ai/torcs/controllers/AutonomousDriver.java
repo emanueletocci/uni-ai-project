@@ -32,14 +32,6 @@ public class AutonomousDriver extends BaseDriver {
         double speedY = sensors.getLateralSpeed();
         double[] trackEdgeSensors = sensors.getTrackEdgeSensors();
 
-        // Recovery Policy
-        if (Math.abs(angle) > stuckAngle) {
-            stuck++;
-        } else if (Math.abs(angle) < 0.2 && Math.abs(position) < 1.0 && speedX > 5) {
-            // Esci dalla recovery solo se l’auto è ragionevolmente allineata e sulla pista
-            stuck = 0;
-        }
-
             // Estrazione e normalizzazione delle feature
             double[] features = FeatureNormalizer.extractAndNormalizeFeatures(
                     trackEdgeSensors,

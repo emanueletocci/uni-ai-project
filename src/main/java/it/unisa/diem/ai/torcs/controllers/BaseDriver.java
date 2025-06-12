@@ -1,4 +1,5 @@
 package it.unisa.diem.ai.torcs.controllers;
+import it.unisa.diem.ai.torcs.Action;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
 
 public abstract class BaseDriver extends Controller{
@@ -124,8 +125,8 @@ public abstract class BaseDriver extends Controller{
             return brake;
     }
 
+    @Override
     public float[] initAngles() {
-
         float[] angles = new float[19];
 
         /*
