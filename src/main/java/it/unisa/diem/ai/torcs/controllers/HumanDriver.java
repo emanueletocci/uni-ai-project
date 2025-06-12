@@ -38,6 +38,7 @@ public class HumanDriver extends BaseDriver {
         double trackPos = model.getTrackPosition();
         double angle = model.getAngleToTrackAxis();
         double speedX = model.getSpeed();
+        double speedY = model.getLateralSpeed();
         int gear = model.getGear();
 
         // Gestione manuale: acceleratore (W), freno (Space), retromarcia (S), sterzo (A/D)
@@ -73,44 +74,11 @@ public class HumanDriver extends BaseDriver {
 
         // Logging dati normalizzati e class label (per behavioral cloning)
         int classLabel = ClassLabel.calculateLabel(action).getCode();
-        double[] features = FeatureNormalizer.extractAndNormalizeFeatures(track, trackPos, angle, speedX);
+        double[] features = FeatureNormalizer.extractAndNormalizeFeatures(track, trackPos, angle, speedX, speedY);
         logger.log(features, classLabel);
 
         return action;
     }
-
-    /*
-     * DISPOSIZIONE DEI SENSORI DI BORDO PISTA (track edge sensors):
-     *
-     * Ogni sensore misura la distanza tra il veicolo e il bordo della pista in una specifica direzione,
-     * espressa come angolo (in gradi) rispetto all’asse longitudinale dell’auto.
-     * La seguente disposizione (custom) concentra più sensori vicino all’asse centrale e agli estremi,
-     * aumentando la risoluzione dove la percezione è più critica per la guida autonoma.
-     *
-     * Indice   Angolo (gradi)
-     *   0        -90
-     *   1        -75
-     *   2        -60
-     *   3        -45
-     *   4        -30
-     *   5        -20
-     *   6        -15
-     *   7        -10
-     *   8         -5
-     *   9          0   (davanti all’auto)
-     *  10         +5
-     *  11        +10
-     *  12        +15
-     *  13        +20
-     *  14        +30
-     *  15        +45
-     *  16        +60
-     *  17        +75
-     *  18        +90
-     *
-     * Nota: questa configurazione NON è la standard di TORCS (che prevede 19 sensori da -90° a +90° con passo 10°),
-     * ma è una scelta personalizzata che permette maggiore precisione nelle zone più rilevanti per la traiettoria.
-     */
 
     /*
     @Override

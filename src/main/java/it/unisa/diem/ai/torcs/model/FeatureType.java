@@ -17,7 +17,11 @@ public enum FeatureType {
     /**
      * Velocità longitudinale del veicolo.
      */
-    SPEED,
+    SPEEDX,
+    /**
+     * Velocità laterale del veicolo.
+     */
+    SPEEDY,
 
     /**
      * Angolo tra l'asse longitudinale del veicolo e la tangente alla pista.
@@ -30,19 +34,14 @@ public enum FeatureType {
     TRACK_POSITION,
 
     /**
-     * Sensore di bordo pista con indice 5 (tipicamente -40 gradi).
+     * Sensore di bordo pista con indice 4
      */
-    //TRACK_EDGE_SENSOR_5(5),
+    TRACK_EDGE_SENSOR_4(4),
 
     /**
-     * Sensore di bordo pista con indice 6 (tipicamente -30 gradi).
+     * Sensore di bordo pista con indice 6
      */
     TRACK_EDGE_SENSOR_6(6),
-
-    /**
-     * Sensore di bordo pista con indice 7 (tipicamente -20 gradi).
-     */
-    TRACK_EDGE_SENSOR_7(7),
 
     /**
      * Sensore di bordo pista con indice 8 (tipicamente -10 gradi).
@@ -62,12 +61,12 @@ public enum FeatureType {
     /**
      * Sensore di bordo pista con indice 11 (tipicamente +20 gradi).
      */
-    TRACK_EDGE_SENSOR_11(11),
+    TRACK_EDGE_SENSOR_12(12),
 
     /**
      * Sensore di bordo pista con indice 12 (tipicamente +30 gradi).
      */
-    TRACK_EDGE_SENSOR_12(12);
+    TRACK_EDGE_SENSOR_14(14);
 
     /**
      * Sensore di bordo pista con indice 13 (tipicamente +40 gradi).

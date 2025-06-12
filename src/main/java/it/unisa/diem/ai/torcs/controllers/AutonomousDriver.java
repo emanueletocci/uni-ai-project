@@ -24,40 +24,25 @@ public class AutonomousDriver extends BaseDriver {
         // Lettura sensori principali
         double angle = sensors.getAngleToTrackAxis();
         double position = sensors.getTrackPosition();
-        double speed = sensors.getSpeed();
+        double speedX = sensors.getSpeed();
+        double speedY = sensors.getLateralSpeed();
         double[] trackEdgeSensors = sensors.getTrackEdgeSensors();
 
         // Recovery Policy
         if (Math.abs(angle) > stuckAngle) {
             stuck++;
-        } else if (Math.abs(angle) < 0.2 && Math.abs(position) < 1.0 && speed > 5) {
+        } else if (Math.abs(angle) < 0.2 && Math.abs(position) < 1.0 && speedX > 5) {
             // Esci dalla recovery solo se l’auto è ragionevolmente allineata e sulla pista
             stuck = 0;
         }
 
-        // Auto Bloccata
-        if (stuck > stuckTime) {
-            cicliRecupero++;
-            float steer = (float) (-sensors.getAngleToTrackAxis() / steerLock);
-            int gear = -1;
-            if (sensors.getAngleToTrackAxis() * sensors.getTrackPosition() > 0) {
-                gear = 1;
-                steer = -steer;
-            }
-            clutch = clutching(sensors, clutch);
-            action.gear = gear;
-            action.steering = steer;
-            action.accelerate = 1.0;
-            action.brake = 0;
-            action.clutch = clutch;
-            System.out.println("Auto bloccata, ciclo: " + cicliRecupero);
-        } else {
             // Estrazione e normalizzazione delle feature
             double[] features = FeatureNormalizer.extractAndNormalizeFeatures(
                     trackEdgeSensors,
                     position,
                     angle,
-                    speed
+                    speedX,
+                    speedY
             );
 
             // Classificazione tramite KNN
@@ -90,7 +75,7 @@ public class AutonomousDriver extends BaseDriver {
 
             // Cambio marcia automatico
             action.gear = getGear(sensors);
-        }
+
         return action;
     }
 

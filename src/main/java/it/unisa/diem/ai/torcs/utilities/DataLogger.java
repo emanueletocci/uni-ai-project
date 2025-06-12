@@ -6,6 +6,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * DataLogger che scrive l'header una sola volta, solo alla creazione del file.
@@ -44,8 +45,7 @@ public class DataLogger {
         }
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename, true))) {
             for (double v : featuresVector) {
-                bw.write(v + ";");
-            }
+                bw.write(String.format(Locale.ROOT, "%.4f;", v));            }
             bw.write(classLabel + "\n");
         } catch (IOException e) {
             System.err.println("Errore scrittura CSV: " + e.getMessage());

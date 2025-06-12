@@ -66,9 +66,10 @@ public class SimpleDriver extends BaseDriver {
         double trackPos = sensors.getTrackPosition();
         double angle = sensors.getAngleToTrackAxis();
         double speedX = sensors.getSpeed();
+        double speedY = sensors.getLateralSpeed();
 
         int classLabel = ClassLabel.calculateLabel(action).getCode();
-        double[] features = FeatureNormalizer.extractAndNormalizeFeatures(track, trackPos, angle, speedX);
+        double[] features = FeatureNormalizer.extractAndNormalizeFeatures(track, trackPos, angle, speedX, speedY);
         logger.log(features, classLabel);
 
         return action;
