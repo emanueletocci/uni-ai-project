@@ -123,6 +123,7 @@ public abstract class BaseDriver extends Controller{
         else
             return brake;
     }
+
     @Override
     public void reset() {
         System.out.println("Restarting the race!");

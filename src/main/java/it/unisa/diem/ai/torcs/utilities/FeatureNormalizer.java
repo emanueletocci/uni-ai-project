@@ -49,12 +49,12 @@ public class FeatureNormalizer {
 
     // Metodo di utilità per ottenere il vettore feature normalizzato (12 elementi)
     public static double[] extractAndNormalizeFeatures(double[] track, double trackPos, double angle, double speed) {
-        double[] features = new double[10];
+        double[] features = new double[12];
         double[] normalizedTrack = normalizeTrackSensors(track);
         System.arraycopy(normalizedTrack, 0, features, 0, normalizedTrack.length);
-        features[7] = normalizeTrackPosition(trackPos);
-        features[8] = normalizeAngleToTrackAxis(angle);
-        features[9] = normalizeSpeed(speed);
+        features[9] = normalizeTrackPosition(trackPos);
+        features[10] = normalizeAngleToTrackAxis(angle);
+        features[11] = normalizeSpeed(speed);
         return features;
     }
 

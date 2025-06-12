@@ -37,7 +37,7 @@ public enum FeatureType {
     /**
      * Sensore di bordo pista con indice 6 (tipicamente -30 gradi).
      */
-    //TRACK_EDGE_SENSOR_6(6),
+    TRACK_EDGE_SENSOR_6(6),
 
     /**
      * Sensore di bordo pista con indice 7 (tipicamente -20 gradi).
@@ -67,12 +67,13 @@ public enum FeatureType {
     /**
      * Sensore di bordo pista con indice 12 (tipicamente +30 gradi).
      */
-    //TRACK_EDGE_SENSOR_12(12),
+    TRACK_EDGE_SENSOR_12(12),
 
     /**
      * Sensore di bordo pista con indice 13 (tipicamente +40 gradi).
      */
     TRACK_EDGE_SENSOR_13(13);
+
 
     private final Integer trackIndex;
 

@@ -4,13 +4,15 @@ import it.unisa.diem.ai.torcs.model.ClassLabel;
 import it.unisa.diem.ai.torcs.sensors.MessageBasedSensorModel;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
 import it.unisa.diem.ai.torcs.actions.Action;
-import it.unisa.diem.ai.torcs.utilities.ContinuousCharReaderUI;
-import it.unisa.diem.ai.torcs.utilities.DataLogger;
-import it.unisa.diem.ai.torcs.utilities.KeyInput;
-import it.unisa.diem.ai.torcs.utilities.FeatureNormalizer;
+import it.unisa.diem.ai.torcs.utilities.*;
+
 import javax.swing.*;
 
 public class HumanDriver extends BaseDriver {
+    private static final RadarVisualizer radar = new RadarVisualizer();
+    static {
+        SwingUtilities.invokeLater(() -> RadarVisualizer.showRadar(radar));
+    }
     static {
         SwingUtilities.invokeLater(ContinuousCharReaderUI::new);
     }
@@ -35,6 +37,7 @@ public class HumanDriver extends BaseDriver {
         // Lettura sensori principali
         // Estraggo tutti i e 19 i sensori di bordo pista
         double[] track = model.getTrackEdgeSensors();
+        radar.updateSensors(track);
         double trackPos = model.getTrackPosition();
         double angle = model.getAngleToTrackAxis();
         double speedX = model.getSpeed();
