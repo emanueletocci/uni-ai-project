@@ -50,7 +50,6 @@ public class AutonomousDriver extends BaseDriver {
      */
     @Override
     public Action control(SensorModel sensors) {
-        double[] trackEdgeSensors = sensors.getTrackEdgeSensors();
         double trackPosition = sensors.getTrackPosition();
 
         if (Math.abs(sensors.getAngleToTrackAxis()) > stuckAngle) {
@@ -58,14 +57,15 @@ public class AutonomousDriver extends BaseDriver {
         } else {
             stuck = 0;
         }
-        // Auto Bloccata: se il contatore supera la soglia, attiva il recupero
-        if(stuck > stuckTime) {
-            return handleRecovery(sensors);
-        }
 
-        if(detectSensorAnomalies(trackEdgeSensors,trackPosition) || isOffTrack(trackPosition)) {
-            return alignToCenter(sensors);
-        }
+        // Recupero della traiettoria se i sensori rilevano anomalie o se il veicolo è fuori pista
+            // Auto Bloccata: se il contatore supera la soglia, attiva il recupero
+            if(stuck > stuckTime) {
+                return handleRecovery(sensors);
+            }
+            if(isOffTrack(trackPosition)) {
+                return alignToCenter(sensors);
+            }
 
         return knnDriving(sensors);
     }
@@ -108,13 +108,8 @@ public class AutonomousDriver extends BaseDriver {
     private Action alignToCenter(SensorModel sensors) {
         Action action = new Action();
         double position = sensors.getTrackPosition(); // 0: centro, -1: bordo destro, +1: bordo sinistro
-        double angle = sensors.getAngleToTrackAxis(); // angolo rispetto all'asse pista
 
-        // Calcola una correzione proporzionale a posizione e angolo
-        double correction = -position * 0.3 - angle * 0.5;
-        correction = Math.max(-1, Math.min(1, correction)); // Normalizza tra -1 e 1
-
-        action.steering = correction;
+        action.steering = -Math.signum(position);
         action.accelerate = 0.3;
         action.brake = 0.0;
         action.gear = sensors.getGear();
@@ -178,8 +173,9 @@ public class AutonomousDriver extends BaseDriver {
                 break;
         }
 
-        // Cambio marcia automatico
+        // Cambio marcia e frizione automatico
         action.gear = getGear(sensors);
+        action.clutch = clutching(sensors, (float) action.clutch);
         return action;
     }
 }

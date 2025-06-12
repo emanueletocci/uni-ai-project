@@ -3,43 +3,47 @@ package it.unisa.diem.ai.torcs.utilities;
 import it.unisa.diem.ai.torcs.model.FeatureType;
 
 /**
- * Classe di utilità per la normalizzazione delle feature utilizzate nel sistema di guida autonoma.
- * Le feature includono sensori di bordo pista, posizione sulla pista, angolo rispetto all'asse e velocità.
+ * Classe di utilità per la normalizzazione delle feature utilizzate nel sistema di guida autonoma TORCS.
+ * Le feature includono sensori di bordo pista, posizione laterale, angolo rispetto all’asse pista e velocità.
  * <p>
- * Le normalizzazioni sono coerenti con i valori attesi dal modello di apprendimento automatico.
+ * Tutte le normalizzazioni restituiscono valori nell’intervallo [0, 1], a meno che non sia diversamente specificato.
+ * I range di input sono definiti secondo la documentazione ufficiale TORCS e le specifiche di progetto.
  */
 public class FeatureNormalizer {
 
-    // COSTANTI DI NORMALIZZAZIONE
+    // --- COSTANTI DI NORMALIZZAZIONE ---
 
-    /** Valore massimo atteso per i sensori di bordo pista. */
+    /** Valore minimo e massimo atteso per i sensori di bordo pista (track edge sensors). */
     public static final double MIN_TRACK_VALUE = 0.0;
     public static final double MAX_TRACK_VALUE = 200.0;
 
-    /** Velocità massima dell’auto, usata per la normalizzazione. */
-    public static final double MAX_SPEED_X = 290.0;
+    /** Velocità longitudinale minima e massima dell’auto (speedX, in km/h). */
     public static final double MIN_SPEED_X = 0.0;
+    public static final double MAX_SPEED_X = 290.0;
 
-    public static final double MAX_SPEED_Y = 40.0;
+    /** Velocità laterale minima e massima dell’auto (speedY, in km/h). */
     public static final double MIN_SPEED_Y = -40.0;
+    public static final double MAX_SPEED_Y = 40.0;
 
-    /** Velocità massima dell’auto, usata per la normalizzazione. IN MODULO*/
-    public static final double MAX_NEGATIVE_SPEED = 60.0;
+    /** Velocità massima in retromarcia (in modulo, km/h). */
     public static final double MIN_NEGATIVE_SPEED = 0.001;
+    public static final double MAX_NEGATIVE_SPEED = 60.0;
 
-    /** Massima deviazione laterale sulla pista (track position ∈ [-1, 1]). */
-    public static final double MAX_TRACK_POSITION = 1.0;
+    /** Posizione laterale massima sulla pista (track position ∈ [-1, 1]). */
     public static final double MIN_TRACK_POSITION = -1.0;
+    public static final double MAX_TRACK_POSITION = 1.0;
 
-    public static final double MAX_ANGLE_TO_TRACK_AXIS = Math.PI;
+    /** Angolo massimo rispetto all’asse pista (in radianti, [-π, π]). */
     public static final double MIN_ANGLE_TO_TRACK_AXIS = -Math.PI;
+    public static final double MAX_ANGLE_TO_TRACK_AXIS = Math.PI;
 
-
-    /** Indici dei sensori di bordo pista usati (in base all'enum FeatureType). */
+    /** Indici dei sensori di bordo pista usati, in base all'enum FeatureType. */
     public static final int[] SENSOR_INDICES = FeatureType.getTrackSensorIndices()
             .stream()
             .mapToInt(Integer::intValue)
             .toArray();
+
+    // --- METODI DI NORMALIZZAZIONE ---
 
     /**
      * Normalizza un valore usando la tecnica Min-Max.
@@ -47,43 +51,30 @@ public class FeatureNormalizer {
      * @param data Valore da normalizzare.
      * @param min  Minimo del dominio.
      * @param max  Massimo del dominio.
-     * @return Valore normalizzato in [0,1].
+     * @return Valore normalizzato in [0, 1].
      */
     private static double normalizzatoreMinMax(double data, Double min, Double max) {
-        if (max == null || min == null || (max.equals(min)) )
-            return 0;
+        if (max == null || min == null || max.equals(min))
+            return 0.0;
+        data = Math.max(min, Math.min(max, data)); // Clipping
         return (data - min) / (max - min);
     }
 
     /**
      * Normalizza un singolo valore di sensore di bordo pista.
      *
-     * @param value Valore del sensore.
-     * @return Valore normalizzato.
+     * @param value Valore del sensore (input atteso: [0, 200]).
+     * @return Valore normalizzato in [0, 1].
      */
     private static double normalizeTrackSensor(double value) {
         return normalizzatoreMinMax(value, MIN_TRACK_VALUE, MAX_TRACK_VALUE);
     }
 
     /**
-     * Normalizza tutti i sensori di bordo pista specificati nell'enum FeatureType.
-     *
-     * @param track Vettore completo dei 19 sensori di bordo pista.
-     * @return Vettore dei sensori selezionati e normalizzati.
-     */
-    private static double[] normalizeTrackSensors(double[] track) {
-        double[] normalized = new double[SENSOR_INDICES.length];
-        for (int i = 0; i < SENSOR_INDICES.length; i++) {
-            normalized[i] = normalizeTrackSensor(track[SENSOR_INDICES[i]]);
-        }
-        return normalized;
-    }
-
-    /**
      * Normalizza la posizione del veicolo sulla pista.
      *
-     * @param value Track position ∈ [-MAX_TRACK_POSITION, MAX_TRACK_POSITION].
-     * @return Valore normalizzato ∈ [0,1].
+     * @param value Track position (input atteso: [-1, 1]; valori fuori range vengono "clippati").
+     * @return Valore normalizzato in [0, 1].
      */
     private static double normalizeTrackPosition(double value) {
         return normalizzatoreMinMax(value, MIN_TRACK_POSITION, MAX_TRACK_POSITION);
@@ -92,45 +83,53 @@ public class FeatureNormalizer {
     /**
      * Normalizza l'angolo tra l'asse del veicolo e quello della pista.
      *
-     * @param value Angolo ∈ [-π, π].
-     * @return Valore normalizzato ∈ [0,1].
+     * @param value Angolo in radianti (input atteso: [-π, π]).
+     * @return Valore normalizzato in [0, 1].
      */
     private static double normalizeAngleToTrackAxis(double value) {
         return normalizzatoreMinMax(value, MIN_ANGLE_TO_TRACK_AXIS, MAX_ANGLE_TO_TRACK_AXIS);
     }
 
     /**
-     * Normalizza la velocità del veicolo.
+     * Normalizza la velocità longitudinale del veicolo.
      *
-     * @param value Velocità in km/h.
-     * @return Valore normalizzato ∈ [0,1].
+     * @param value Velocità in km/h (input atteso: [0, 290]).
+     * @return Valore normalizzato in [0, 1].
      */
     private static double normalizeSpeedX(double value) {
         return normalizzatoreMinMax(value, MIN_SPEED_X, MAX_SPEED_X);
     }
 
     /**
-     * Normalizza la velocità in retromarcia (<0), usando il modulo.
+     * Normalizza la velocità in retromarcia (valori negativi), usando il modulo.
+     *
+     * @param value Velocità negativa in km/h (input atteso: [-60, -0.001]).
+     * @return Valore normalizzato in [0, 1].
      */
     private static double normalizeNegativeSpeed(double value) {
         return normalizzatoreMinMax(-value, MIN_NEGATIVE_SPEED, MAX_NEGATIVE_SPEED);
     }
 
+    /**
+     * Normalizza la velocità laterale del veicolo.
+     *
+     * @param value Velocità laterale in km/h (input atteso: [-40, 40]).
+     * @return Valore normalizzato in [0, 1].
+     */
     private static double normalizeSpeedY(double value) {
         return normalizzatoreMinMax(value, MIN_SPEED_Y, MAX_SPEED_Y);
     }
-
 
     /**
      * Estrae e normalizza le feature per il modello, mantenendo l'ordine stabilito da {@link FeatureType}.
      * I valori normalizzati includono sensori di bordo pista, track position, angolo e velocità.
      *
-     * @param track    Vettore dei 19 sensori di bordo pista.
-     * @param trackPos Posizione sulla pista.
-     * @param angle    Angolo rispetto all'asse della pista.
-     * @param speedX    Velocità longitudinale dell'auto.
-     *
-     * @return Vettore di feature normalizzate nell’ordine definito da FeatureType.
+     * @param track    Vettore dei 19 sensori di bordo pista (ciascun valore atteso in [0, 200]).
+     * @param trackPos Posizione sulla pista (atteso in [-1, 1]).
+     * @param angle    Angolo rispetto all'asse della pista (atteso in [-π, π]).
+     * @param speedX   Velocità longitudinale (attesa in [0, 290]).
+     * @param speedY   Velocità laterale (attesa in [-40, 40]).
+     * @return Vettore di feature normalizzate in [0, 1].
      */
     public static double[] extractAndNormalizeFeatures(double[] track, double trackPos, double angle, double speedX, double speedY) {
         double[] features = new double[FeatureType.values().length];
@@ -144,7 +143,7 @@ public class FeatureNormalizer {
             } else {
                 switch (feature) {
                     case SPEEDX:
-                        features[idx] = (speedX >=0) ? normalizeSpeedX(speedX) : normalizeNegativeSpeed(speedX);
+                        features[idx] = (speedX >= 0) ? normalizeSpeedX(speedX) : normalizeNegativeSpeed(speedX);
                         break;
                     case SPEEDY:
                         features[idx] = normalizeSpeedY(speedY);
@@ -160,7 +159,6 @@ public class FeatureNormalizer {
                 }
             }
         }
-
         return features;
     }
 
@@ -170,7 +168,7 @@ public class FeatureNormalizer {
      *
      * @param extractedFeatures Vettore di feature da normalizzare.
      * @param track             Vettore dei 19 sensori di bordo pista (necessario per reinserire i valori reali dei sensori).
-     * @return Vettore di feature normalizzate.
+     * @return Vettore di feature normalizzate in [0, 1].
      */
     public static double[] normalizeExtractedFeatures(double[] extractedFeatures, double[] track) {
         if (extractedFeatures.length != FeatureType.values().length) {
@@ -188,7 +186,9 @@ public class FeatureNormalizer {
             } else {
                 switch (feature) {
                     case SPEEDX:
-                        normalized[idx] = normalizeSpeedX(extractedFeatures[idx]);
+                        normalized[idx] = (extractedFeatures[idx] >= 0)
+                                ? normalizeSpeedX(extractedFeatures[idx])
+                                : normalizeNegativeSpeed(extractedFeatures[idx]);
                         break;
                     case SPEEDY:
                         normalized[idx] = normalizeSpeedY(extractedFeatures[idx]);
@@ -204,7 +204,6 @@ public class FeatureNormalizer {
                 }
             }
         }
-
         return normalized;
     }
 }

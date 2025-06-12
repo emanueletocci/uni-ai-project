@@ -8,7 +8,7 @@ public abstract class BaseDriver extends Controller{
     final int[] gearUp = { 5000, 6000, 6000, 6500, 7000, 0 };
     final int[] gearDown = { 0, 2500, 3000, 3000, 3500, 3500 };
 
-    final int stuckTime = 25;
+    final int stuckTime = 100;
     final float stuckAngle = (float) 0.523598775; // PI/6
 
     final float maxSpeedDist = 70;
@@ -34,13 +34,12 @@ public abstract class BaseDriver extends Controller{
     final float clutchMaxModifier = (float) 1.3;
     final float clutchMaxTime = (float) 1.5;
 
-    static final float STERZATA = -0.5f;
+    static final float STERZATA = 0.2f;
     static final float FRENATA = 0.7f;
     static final float ACCELERAZIONE = 1f;
 
     int stuck = 0;
     float clutch = 0;
-    int anomalyCounter = 0;
 
     public BaseDriver() {
         super();
@@ -145,28 +144,36 @@ public abstract class BaseDriver extends Controller{
     // Azioni di guida semplificate
     // Dritto (accelera)
     void accelera(Action action, SensorModel sensors) {
+        System.out.println("Accelera!");
         action.accelerate = ACCELERAZIONE;
+        action.brake = 0;
     }
 
     // Gira a sinistra (unico metodo)
     void giraSinistra(Action action) {
-        action.steering = -STERZATA;
+        System.out.println("Gira a sinistra!");
+        action.steering = STERZATA;
     }
 
     // Gira a destra (unico metodo)
     void giraDestra(Action action) {
-        action.steering = STERZATA;
+        System.out.println("Gira a destra!");
+        action.steering = -STERZATA;
     }
 
     // Frena (dritto)
     void frena(Action action, SensorModel sensors) {
+        System.out.println("Frena!");
         action.brake = filterABS(sensors, FRENATA); // Freno con ABS
+        action.accelerate = 0f;
     }
 
     // Retromarcia (con correzione angolo)
     void retromarcia(Action action, SensorModel sensors) {
+        System.out.println("Retromarcia!");
         action.gear = -1;
         action.accelerate = ACCELERAZIONE/2;
+        action.brake = 0f;
 
         // Correggi la direzione in base all'angolo rispetto all'asse della pista
         action.steering = (float) (-sensors.getAngleToTrackAxis() / (Math.PI / 2));
@@ -174,7 +181,8 @@ public abstract class BaseDriver extends Controller{
 
     // Nessuna azione / decelerazione
     void mantieniVelocita(Action action) {
-        action.accelerate = 0.0;
+        System.out.println("Mantieni velocità!");
+        action.accelerate = 0f;
         action.brake = 0.0;
         action.steering = 0.0;
     }
@@ -191,36 +199,23 @@ public abstract class BaseDriver extends Controller{
     }
 
     /**
-     * Rileva se i sensori selezionati presentano valori anomali e notifica immediatamente.
+     * Rileva se i sensori selezionati presentano valori anomali e notifica immediatamente quale sensore non funziona.
      *
      * @param trackEdgeSensors Array completo dei sensori di bordo pista.
-     * @param trackPosition Posizione laterale dell'auto rispetto al centro pista.
-     * @return true se sono rilevate anomalie nei sensori selezionati, false altrimenti.
+     * @return true se almeno un sensore selezionato è anomalo, false altrimenti.
      */
-    boolean detectSensorAnomalies(double[] trackEdgeSensors, double trackPosition) {
+    boolean detectSensorAnomalies(double[] trackEdgeSensors) {
         List<Integer> indices = FeatureType.getTrackSensorIndices();
         boolean anyAnomaly = false;
 
-        // Controlla ogni sensore individualmente e notifica immediatamente
         for (int idx : indices) {
             double value = trackEdgeSensors[idx];
             if (value <= 0 || value > 200) {
+                System.out.println("⚠️ ALLARME: Sensore " + idx + " anomalo! Valore: " + value);
                 anyAnomaly = true;
             }
         }
-
-        System.out.println("⚠️ ALLARME: Sensori anomali rilevati! Probabile fuori pista o malfunzionamento.");
-
-
-        // Se siamo ancora in pista ma ci sono anomalie, incrementa il contatore globale
-        boolean stillOnTrack = (trackPosition > -0.9 && trackPosition < 0.9);
-        if (anyAnomaly && stillOnTrack) {
-            anomalyCounter++;
-            System.out.println("🔧 Totale anomalie rilevate: " + anomalyCounter);
-            return true;
-        }
-
-        return false;
+        return anyAnomaly;
     }
 
 }

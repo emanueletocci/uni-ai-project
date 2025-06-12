@@ -61,7 +61,7 @@ public class HumanDriver extends BaseDriver {
         double[] features = FeatureNormalizer.extractAndNormalizeFeatures(track, trackPos, angle, speedX, speedY);
         logger.log(features, classLabel);
 
-        detectSensorAnomalies(track, trackPos);
+        detectSensorAnomalies(track);
 
         return action;
     }

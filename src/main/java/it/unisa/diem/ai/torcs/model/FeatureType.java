@@ -125,7 +125,7 @@ public enum FeatureType {
         for (FeatureType f : values()) {
             joiner.add(f.name());
         }
-        joiner.add("Label");
+        joiner.add("LABEL");
         return joiner.toString();
     }
 }
