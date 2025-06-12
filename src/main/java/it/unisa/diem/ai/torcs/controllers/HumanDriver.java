@@ -9,7 +9,7 @@ import javax.swing.*;
 
 public class HumanDriver extends BaseDriver {
     private static final RadarVisualizer radar = new RadarVisualizer();
-    int count = 0;
+    int giriFuoriPista = 0;
     static {
         SwingUtilities.invokeLater(ContinuousCharReaderUI::new);
         SwingUtilities.invokeLater(() -> RadarVisualizer.showRadar(radar));
@@ -63,8 +63,8 @@ public class HumanDriver extends BaseDriver {
         logger.log(features, classLabel);
 
         if (isOffTrack(trackPos)) {
-            count++;
-            System.out.println("🚨 ATTENZIONE: Auto fuori pista! Giro: : " + count);
+            giriFuoriPista++;
+            System.out.println("🚨 ATTENZIONE: Auto fuori pista! Giro: : " + giriFuoriPista);
         }
 
         return action;

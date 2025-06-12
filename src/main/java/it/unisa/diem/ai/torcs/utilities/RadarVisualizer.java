@@ -1,7 +1,11 @@
 package it.unisa.diem.ai.torcs.utilities;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 public class RadarVisualizer extends JPanel {
     private double[] distances = new double[19];
