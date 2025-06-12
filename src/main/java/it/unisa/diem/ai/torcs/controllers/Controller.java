@@ -1,6 +1,6 @@
 package it.unisa.diem.ai.torcs.controllers;
 
-import it.unisa.diem.ai.torcs.actions.Action;
+import it.unisa.diem.ai.torcs.Action;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
 
 public abstract class Controller {

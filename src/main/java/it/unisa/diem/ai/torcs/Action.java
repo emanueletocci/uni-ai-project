@@ -1,4 +1,4 @@
-package it.unisa.diem.ai.torcs.actions;
+package it.unisa.diem.ai.torcs;
 
 /**
  * Created by IntelliJ IDEA. User: Administrator Date: Mar 4, 2008 Time: 3:35:31

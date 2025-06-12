@@ -1,7 +1,7 @@
 package it.unisa.diem.ai.torcs.controllers;
 
 import it.unisa.diem.ai.torcs.Sample;
-import it.unisa.diem.ai.torcs.actions.Action;
+import it.unisa.diem.ai.torcs.Action;
 import it.unisa.diem.ai.torcs.classifier.NearestNeighbor;
 import it.unisa.diem.ai.torcs.model.ClassLabel;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;

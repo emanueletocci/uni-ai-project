@@ -1,5 +1,5 @@
 package it.unisa.diem.ai.torcs.model;
-import it.unisa.diem.ai.torcs.actions.Action;
+import it.unisa.diem.ai.torcs.Action;
 
 /**
  * Enum che centralizza la gestione delle classi di azione per behavioral cloning e classificazione.

@@ -2,10 +2,7 @@ package it.unisa.diem.ai.torcs.utilities;
 
 import it.unisa.diem.ai.torcs.model.FeatureType;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.Locale;
 
 /**

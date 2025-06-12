@@ -3,7 +3,7 @@ package it.unisa.diem.ai.torcs.controllers;
 import it.unisa.diem.ai.torcs.model.ClassLabel;
 import it.unisa.diem.ai.torcs.sensors.MessageBasedSensorModel;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
-import it.unisa.diem.ai.torcs.actions.Action;
+import it.unisa.diem.ai.torcs.Action;
 import it.unisa.diem.ai.torcs.utilities.ContinuousCharReaderUI;
 import it.unisa.diem.ai.torcs.utilities.DataLogger;
 import it.unisa.diem.ai.torcs.utilities.KeyInput;

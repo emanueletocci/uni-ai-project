@@ -4,7 +4,7 @@
 package it.unisa.diem.ai.torcs.comunication;
 
 import it.unisa.diem.ai.torcs.sensors.MessageBasedSensorModel;
-import it.unisa.diem.ai.torcs.actions.Action;
+import it.unisa.diem.ai.torcs.Action;
 import it.unisa.diem.ai.torcs.controllers.Controller;
 
 import java.util.StringTokenizer;
