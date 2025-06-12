@@ -32,7 +32,7 @@ public abstract class BaseDriver extends Controller{
     final float clutchMaxModifier = (float) 1.3;
     final float clutchMaxTime = (float) 1.5;
 
-    static final float STERZATA = -0.8f;
+    static final float STERZATA = -0.6f;
     static final float FRENATA = 0.7f;
     static final float ACCELERAZIONE = 1f;
 

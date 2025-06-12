@@ -18,7 +18,6 @@ public class AutonomousDriver extends BaseDriver {
     private static final RadarVisualizer radar = new RadarVisualizer();
 
     static {
-        SwingUtilities.invokeLater(ContinuousCharReaderUI::new);
         SwingUtilities.invokeLater(() -> RadarVisualizer.showRadar(radar));
     }
 
@@ -54,7 +53,7 @@ public class AutonomousDriver extends BaseDriver {
 
             // Azione in base alla classe predetta (allineata al dataset semplificato)
             switch (label) {
-                case ACCELERA_DRITTO:
+                case ACCELERA:
                     accelera(action, sensors);
                     break;
                 case GIRA_SINISTRA:
@@ -70,8 +69,10 @@ public class AutonomousDriver extends BaseDriver {
                     retromarcia(action, sensors);
                     break;
                 case MANTIENI_VELOCITA:
-                default:
                     mantieniVelocita(action);
+                    break;
+                default:
+                    System.out.println("ERROR: unknown label " + label);
                     break;
             }
 

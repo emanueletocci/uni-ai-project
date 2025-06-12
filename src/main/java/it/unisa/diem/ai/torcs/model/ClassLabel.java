@@ -9,7 +9,7 @@ public enum ClassLabel {
     /**
      * Azione: accelera dritto.
      */
-    ACCELERA_DRITTO(0, "acceleraDritto"),
+    ACCELERA(0, "acceleraDritto"),
     /**
      * Azione: gira a sinistra.
      */
@@ -22,6 +22,7 @@ public enum ClassLabel {
 
     /**
      * Azione: mantieni velocità (nessuna azione specifica).
+     * Caso di default quando non si accelera, frena o sterza.
      */
     MANTIENI_VELOCITA(3, "mantieniVelocita"),
     /**
@@ -75,7 +76,7 @@ public enum ClassLabel {
         if (action.brake > 0.1) return FRENA;
         if (action.steering > 0.15) return GIRA_SINISTRA;
         if (action.steering < -0.15) return GIRA_DESTRA;
-        if (action.accelerate > 0.7f) return ACCELERA_DRITTO;
+        if (action.accelerate > 0.7f) return ACCELERA;
         return MANTIENI_VELOCITA;
     }
 

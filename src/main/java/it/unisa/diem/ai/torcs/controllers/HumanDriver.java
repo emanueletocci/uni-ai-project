@@ -9,7 +9,7 @@ import javax.swing.*;
 
 public class HumanDriver extends BaseDriver {
     private static final RadarVisualizer radar = new RadarVisualizer();
-
+    int count = 0;
     static {
         SwingUtilities.invokeLater(ContinuousCharReaderUI::new);
         SwingUtilities.invokeLater(() -> RadarVisualizer.showRadar(radar));
@@ -36,31 +36,20 @@ public class HumanDriver extends BaseDriver {
         double speedY = sensors.getLateralSpeed();
 
         // --- GESTIONE COMBINATA: VELOCITÀ + STERZO ---
-        boolean azioneEseguita = false;
 
         if (KeyInput.brake) {
             frena(action, sensors);
-            azioneEseguita = true;
         } else if (KeyInput.down && speedX < 5.0) {
             retromarcia(action, sensors);
-            azioneEseguita = true;
         } else if (KeyInput.up) {
             accelera(action, sensors);
-            azioneEseguita = true;
         }
 
         // Sovrascrive solo lo sterzo, mantenendo brake/accelerate impostati prima
         if (KeyInput.left && !KeyInput.right) {
             giraSinistra(action);
-            azioneEseguita = true;
         } else if (KeyInput.right && !KeyInput.left) {
             giraDestra(action);
-            azioneEseguita = true;
-        }
-
-        // Nessuna azione → mantieni velocità
-        if (!azioneEseguita) {
-            mantieniVelocita(action);
         }
 
         // Cambio automatico solo se non in retro
@@ -74,7 +63,8 @@ public class HumanDriver extends BaseDriver {
         logger.log(features, classLabel);
 
         if (isOffTrack(trackPos)) {
-            System.out.println("🚨 ATTENZIONE: Auto fuori pista!");
+            count++;
+            System.out.println("🚨 ATTENZIONE: Auto fuori pista! Giro: : " + count);
         }
 
         return action;
