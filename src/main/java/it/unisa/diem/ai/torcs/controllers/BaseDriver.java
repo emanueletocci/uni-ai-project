@@ -205,10 +205,12 @@ public abstract class BaseDriver extends Controller{
         for (int idx : indices) {
             double value = trackEdgeSensors[idx];
             if (value <= 0 || value > 200) {
-                System.out.println("⚠️ ALLARME: Sensore " + idx + " non funzionante! Valore: " + value);
                 anyAnomaly = true;
             }
         }
+
+        System.out.println("⚠️ ALLARME: Sensori anomali rilevati! Probabile fuori pista o malfunzionamento.");
+
 
         // Se siamo ancora in pista ma ci sono anomalie, incrementa il contatore globale
         boolean stillOnTrack = (trackPosition > -0.9 && trackPosition < 0.9);

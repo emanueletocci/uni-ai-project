@@ -22,9 +22,6 @@ public class AutonomousDriver extends BaseDriver {
     /** Classificatore KNN per la scelta dell'azione di guida. */
     private final NearestNeighbor knn;
 
-    /** Contatore dei cicli consecutivi in cui l'auto è bloccata. */
-    private int stuckCounter = 0;
-
     /** Visualizzatore radar per il debug dei sensori. */
     private static final RadarVisualizer radar = new RadarVisualizer();
 
@@ -134,7 +131,6 @@ public class AutonomousDriver extends BaseDriver {
      */
     private Action knnDriving(SensorModel sensors) {
         Action action = new Action();
-        stuckCounter = 0;
 
         // Lettura sensori principali
         double angle = sensors.getAngleToTrackAxis();
