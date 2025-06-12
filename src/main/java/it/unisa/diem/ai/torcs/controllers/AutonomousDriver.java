@@ -12,6 +12,11 @@ public class AutonomousDriver extends BaseDriver {
     private final NearestNeighbor knn;
     private final Action action;
 
+    // Valori di sterzata intermedi (modifica se vuoi sterzate più o meno decise)
+    private static final float STEER_NONE = 0.0f;
+    private static final float STEER_SOFT_LEFT = 0.5f;
+    private static final float STEER_SOFT_RIGHT = -0.5f;
+
     public AutonomousDriver() {
         // Percorso del dataset da behavioral cloning
         super();
@@ -118,16 +123,14 @@ public class AutonomousDriver extends BaseDriver {
 
     // Gira a sinistra (unico metodo)
     private void giraSinistra(Action action) {
-        action.steering = 0.5f;
+        action.steering = STEER_SOFT_LEFT;
         action.brake = 0.0;
-        action.accelerate = 0.7f;
     }
 
     // Gira a destra (unico metodo)
     private void giraDestra(Action action) {
-        action.steering = -0.5f;
+        action.steering = STEER_SOFT_RIGHT;
         action.brake = 0.0;
-        action.accelerate = 0.7f;
     }
 
     // Frena (dritto)

@@ -9,7 +9,7 @@ public abstract class BaseDriver extends Controller{
     final float stuckAngle = (float) 0.523598775; // PI/6
 
     final float maxSpeedDist = 70;
-    final float maxSpeed = 150;
+    final float maxSpeed = 300;
     final float sin5 = (float) 0.08716;
     final float cos5 = (float) 0.99619;
 
