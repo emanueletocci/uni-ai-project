@@ -5,16 +5,22 @@ import it.unisa.diem.ai.torcs.Action;
 import it.unisa.diem.ai.torcs.classifier.NearestNeighbor;
 import it.unisa.diem.ai.torcs.model.ClassLabel;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
+import it.unisa.diem.ai.torcs.utilities.ContinuousCharReaderUI;
 import it.unisa.diem.ai.torcs.utilities.FeatureNormalizer;
+import it.unisa.diem.ai.torcs.utilities.RadarVisualizer;
+
+import javax.swing.*;
 
 public class AutonomousDriver extends BaseDriver {
-    private int cicliRecupero = 0;
     private final NearestNeighbor knn;
     private final Action action;
 
-    // Valori di sterzata intermedi (modifica se vuoi sterzate più o meno decise)
-    private static final float STEER_SOFT_LEFT = 0.5f;
-    private static final float STEER_SOFT_RIGHT = -0.5f;
+    private static final RadarVisualizer radar = new RadarVisualizer();
+
+    static {
+        SwingUtilities.invokeLater(ContinuousCharReaderUI::new);
+        SwingUtilities.invokeLater(() -> RadarVisualizer.showRadar(radar));
+    }
 
     public AutonomousDriver() {
         // Percorso del dataset da behavioral cloning
@@ -31,6 +37,7 @@ public class AutonomousDriver extends BaseDriver {
         double speedX = sensors.getSpeed();
         double speedY = sensors.getLateralSpeed();
         double[] trackEdgeSensors = sensors.getTrackEdgeSensors();
+        radar.updateSensors(trackEdgeSensors);
 
             // Estrazione e normalizzazione delle feature
             double[] features = FeatureNormalizer.extractAndNormalizeFeatures(
@@ -48,7 +55,7 @@ public class AutonomousDriver extends BaseDriver {
             // Azione in base alla classe predetta (allineata al dataset semplificato)
             switch (label) {
                 case ACCELERA_DRITTO:
-                    acceleraDritto(action);
+                    accelera(action, sensors);
                     break;
                 case GIRA_SINISTRA:
                     giraSinistra(action);
@@ -71,55 +78,11 @@ public class AutonomousDriver extends BaseDriver {
             // Cambio marcia automatico
             action.gear = getGear(sensors);
 
+        if (isOffTrack(position)) {
+            System.out.println("🚨 ATTENZIONE: Auto fuori pista!");
+        }
+
         return action;
     }
-
-
-    // Azioni di guida semplificate
-    // Dritto (accelera)
-    private void acceleraDritto(Action action) {
-        action.steering = 0.0;
-        action.brake = 0.0;
-        action.accelerate = 1d;
-    }
-
-
-    // Gira a sinistra (unico metodo)
-    private void giraSinistra(Action action) {
-        action.steering = STEER_SOFT_LEFT;
-        action.brake = 0.0;
-        action.accelerate = 0.25d;
-    }
-
-    // Gira a destra (unico metodo)
-    private void giraDestra(Action action) {
-        action.steering = STEER_SOFT_RIGHT;
-        action.brake = 0.0;
-        action.accelerate = 0.25d;
-    }
-
-    // Frena (dritto)
-    private void frena(Action action, SensorModel sensors) {
-        action.steering = 0.0;
-        action.accelerate = 0.0;
-        action.brake = filterABS(sensors, 0.7f); // Freno con ABS
-    }
-
-    // Retromarcia (con correzione angolo)
-    private void retromarcia(Action action, SensorModel sensors) {
-        action.gear = -1;
-        action.accelerate = 0.5f;
-        action.brake = 0.0;
-        // Correggi la direzione in base all'angolo rispetto all'asse della pista
-        action.steering = (float) (-sensors.getAngleToTrackAxis() / (Math.PI / 2));
-    }
-
-    // Nessuna azione / decelerazione
-    private void mantieniVelocita(Action action) {
-        action.accelerate = 0.3f;
-        action.brake = 0.0;
-        action.steering = 0.0;
-    }
-
 
 }

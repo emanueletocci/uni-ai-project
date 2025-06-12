@@ -32,6 +32,11 @@ public abstract class BaseDriver extends Controller{
     final float clutchMaxModifier = (float) 1.3;
     final float clutchMaxTime = (float) 1.5;
 
+    static final float STERZATA = -0.8f;
+    static final float FRENATA = 0.7f;
+    static final float ACCELERAZIONE = 1f;
+
+
     int stuck = 0;
     float clutch = 0;
 
@@ -155,4 +160,53 @@ public abstract class BaseDriver extends Controller{
     public void shutdown() {
         System.out.println("Bye bye!");
     }
+
+    // Azioni di guida semplificate
+    // Dritto (accelera)
+    void accelera(Action action, SensorModel sensors) {
+        action.accelerate = ACCELERAZIONE;
+    }
+
+    // Gira a sinistra (unico metodo)
+    void giraSinistra(Action action) {
+        action.steering = -STERZATA;
+    }
+
+    // Gira a destra (unico metodo)
+    void giraDestra(Action action) {
+        action.steering = STERZATA;
+    }
+
+    // Frena (dritto)
+    void frena(Action action, SensorModel sensors) {
+        action.brake = filterABS(sensors, FRENATA); // Freno con ABS
+    }
+
+    // Retromarcia (con correzione angolo)
+    void retromarcia(Action action, SensorModel sensors) {
+        action.gear = -1;
+        action.accelerate = ACCELERAZIONE/2;
+
+        // Correggi la direzione in base all'angolo rispetto all'asse della pista
+        action.steering = (float) (-sensors.getAngleToTrackAxis() / (Math.PI / 2));
+    }
+
+    // Nessuna azione / decelerazione
+    void mantieniVelocita(Action action) {
+        action.accelerate = 0.0;
+        action.brake = 0.0;
+        action.steering = 0.0;
+    }
+
+    /**
+     * Restituisce true se l'auto è fuori pista, ovvero se il valore assoluto della posizione
+     * rispetto al centro della pista è maggiore di 1.0.
+     *
+     * @param trackPos posizione dell'auto rispetto al centro pista (in [-inf, +inf])
+     * @return true se l'auto è fuori pista
+     */
+    boolean isOffTrack(double trackPos) {
+        return Math.abs(trackPos) > 1.0;
+    }
+
 }
