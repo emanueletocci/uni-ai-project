@@ -1,36 +1,53 @@
 package it.unisa.diem.ai.torcs;
 
+import it.unisa.diem.ai.torcs.model.ClassLabel;
+
+import java.util.Locale;
+
 /**
- * Sample class represents a single data point in the dataset.
- * It contains features and a class label, which can be used for classification tasks.
- * The class also provides methods to calculate the distance between samples.
+ * La classe Sample rappresenta un singolo campione di dati,
+ * composto da un vettore di feature e da una label di classe di tipo enumerato.
+ * È utilizzata per compiti di classificazione e behavioral cloning.
  */
 public class Sample {
+    /**
+     * Array di valori numerici che rappresentano le feature del campione.
+     */
     public double[] features;
-    public int cls; // intero che rappresenta la classe del campione (1=accelera, 2=frena)
 
-    /*
-    Constructor to initialize the Sample with a given set of features and class label.
-    This is typically used when building the dataset.
-    */
-    public Sample(double[] features, int cls) {
+    /**
+     * Etichetta di classe associata al campione (di tipo ClassLabel).
+     */
+    public ClassLabel label;
+
+    /**
+     * Costruisce un oggetto Sample dato un vettore di feature e una label di classe.
+     *
+     * @param features array di valori delle feature
+     * @param label    etichetta di classe (ClassLabel)
+     */
+    public Sample(double[] features, ClassLabel label) {
         this.features = features;
-        this.cls = cls;
+        this.label = label;
     }
 
-    /*
-    Constructor to initialize the Sample with a given set of features without a class label.
-    This is used when classifying a new sample.
-    */
+    /**
+     * Costruisce un oggetto Sample dato solo il vettore di feature.
+     * Utilizzato quando la classe non è nota o deve essere assegnata successivamente.
+     *
+     * @param features array di valori delle feature
+     */
     public Sample(double[] features) {
         this.features = features;
-        this.cls = -1; // Default class value
+        this.label = null;
     }
 
-    /*
-    Constructor to initialize the Sample from a CSV line.
-    Assumes the last value in the CSV is the class label.
-    */
+    /**
+     * Costruisce un oggetto Sample a partire da una riga CSV.
+     * Si assume che l'ultima colonna sia il codice numerico della classe.
+     *
+     * @param line riga del file CSV contenente feature e label, separate da punto e virgola
+     */
     public Sample(String line) {
         String[] parts = line.split(";");
         int n = parts.length;
@@ -38,12 +55,17 @@ public class Sample {
         for (int i = 0; i < n - 1; i++) {
             features[i] = Double.parseDouble(parts[i].trim());
         }
-        this.cls = Integer.parseInt(parts[n - 1].trim());
+        int code = Integer.parseInt(parts[n - 1].trim());
+        this.label = ClassLabel.fromCode(code);
     }
 
-    /*
-    Method to calculate the Euclidean distance between this sample and another sample.
-    */
+    /**
+     * Calcola la distanza euclidea tra questo campione e un altro campione.
+     * La distanza viene calcolata sulle feature, ignorando la label.
+     *
+     * @param other altro oggetto Sample con cui calcolare la distanza
+     * @return distanza euclidea tra i due campioni
+     */
     public double distance(Sample other) {
         double sum = 0;
         for (int i = 0; i < this.features.length; i++) {

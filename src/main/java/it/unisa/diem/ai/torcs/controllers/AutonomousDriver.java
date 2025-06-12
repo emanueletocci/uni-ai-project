@@ -13,7 +13,6 @@ public class AutonomousDriver extends BaseDriver {
     private final Action action;
 
     // Valori di sterzata intermedi (modifica se vuoi sterzate più o meno decise)
-    private static final float STEER_NONE = 0.0f;
     private static final float STEER_SOFT_LEFT = 0.5f;
     private static final float STEER_SOFT_RIGHT = -0.5f;
 
@@ -54,7 +53,6 @@ public class AutonomousDriver extends BaseDriver {
             int predictedClass = knn.classify(new Sample(features), 3);
             ClassLabel label = ClassLabel.fromCode(predictedClass);
 
-
             // Azione in base alla classe predetta (allineata al dataset semplificato)
             switch (label) {
                 case ACCELERA_DRITTO:
@@ -90,54 +88,29 @@ public class AutonomousDriver extends BaseDriver {
     private void acceleraDritto(Action action) {
         action.steering = 0.0;
         action.brake = 0.0;
-        action.accelerate = 1.0;
+        action.accelerate = 1d;
     }
 
-    // Gira leggermente a sinistra
-    private void giraLeggeroSinistra(Action action) {
-        action.steering = 0.3f;
-        action.brake = 0.0;
-        action.accelerate = 0.8f;
-    }
-
-    // Gira forte a sinistra
-    private void giraForteSinistra(Action action) {
-        action.steering = 0.7f;
-        action.brake = 0.0;
-        action.accelerate = 0.6f;
-    }
-
-    // Gira leggermente a destra
-    private void giraLeggeroDestra(Action action) {
-        action.steering = -0.3f;
-        action.brake = 0.0;
-        action.accelerate = 0.8f;
-    }
-
-    // Gira forte a destra
-    private void giraForteDestra(Action action) {
-        action.steering = -0.7f;
-        action.brake = 0.0;
-        action.accelerate = 0.6f;
-    }
 
     // Gira a sinistra (unico metodo)
     private void giraSinistra(Action action) {
         action.steering = STEER_SOFT_LEFT;
         action.brake = 0.0;
+        action.accelerate = 0.25d;
     }
 
     // Gira a destra (unico metodo)
     private void giraDestra(Action action) {
         action.steering = STEER_SOFT_RIGHT;
         action.brake = 0.0;
+        action.accelerate = 0.25d;
     }
 
     // Frena (dritto)
     private void frena(Action action, SensorModel sensors) {
         action.steering = 0.0;
         action.accelerate = 0.0;
-        action.brake = filterABS(sensors, 1.0f); // Freno con ABS
+        action.brake = filterABS(sensors, 0.7f); // Freno con ABS
     }
 
     // Retromarcia (con correzione angolo)
@@ -151,27 +124,10 @@ public class AutonomousDriver extends BaseDriver {
 
     // Nessuna azione / decelerazione
     private void mantieniVelocita(Action action) {
-        action.accelerate = 0.5f;
+        action.accelerate = 0.3f;
         action.brake = 0.0;
         action.steering = 0.0;
     }
 
-
-    /*
-    @Override
-    public float[] initAngles() {
-        float[] angles = new float[19];
-        for (int i = 0; i < 5; i++) {
-            angles[i] = -90 + i * 15;
-            angles[18 - i] = 90 - i * 15;
-        }
-        for (int i = 5; i < 9; i++) {
-            angles[i] = -20 + (i - 5) * 5;
-            angles[18 - i] = 20 - (i - 5) * 5;
-        }
-        angles[9] = 0;
-        return angles;
-    }
-    */
 
 }
