@@ -9,7 +9,6 @@ import javax.swing.*;
 
 public class HumanDriver extends BaseDriver {
     private static final RadarVisualizer radar = new RadarVisualizer();
-    int giriFuoriPista = 0;
     static {
         SwingUtilities.invokeLater(ContinuousCharReaderUI::new);
         SwingUtilities.invokeLater(() -> RadarVisualizer.showRadar(radar));
@@ -61,10 +60,6 @@ public class HumanDriver extends BaseDriver {
         int classLabel = ClassLabel.calculateLabel(action).getCode();
         double[] features = FeatureNormalizer.extractAndNormalizeFeatures(track, trackPos, angle, speedX, speedY);
         logger.log(features, classLabel);
-
-        if (isOffTrack(trackPos)) {
-            giriFuoriPista++;
-        }
 
         detectSensorAnomalies(track, trackPos);
 
