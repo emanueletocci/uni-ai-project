@@ -6,8 +6,15 @@ import it.unisa.diem.ai.torcs.classifier.NearestNeighbor;
 import it.unisa.diem.ai.torcs.model.ClassLabel;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
 import it.unisa.diem.ai.torcs.utilities.FeatureNormalizer;
+import it.unisa.diem.ai.torcs.utilities.RadarVisualizer;
+
+import javax.swing.*;
 
 public class AutonomousDriver extends BaseDriver {
+    private static final RadarVisualizer radar = new RadarVisualizer();
+    static {
+        SwingUtilities.invokeLater(() -> RadarVisualizer.showRadar(radar));
+    }
     private int cicliRecupero = 0;
     private final NearestNeighbor knn;
     private final Action action;
@@ -26,6 +33,7 @@ public class AutonomousDriver extends BaseDriver {
         double position = sensors.getTrackPosition();
         double speed = sensors.getSpeed();
         double[] trackEdgeSensors = sensors.getTrackEdgeSensors();
+        radar.updateSensors(trackEdgeSensors);
 
         // Recovery Policy
         if (Math.abs(angle) > stuckAngle) {
@@ -47,7 +55,7 @@ public class AutonomousDriver extends BaseDriver {
             clutch = clutching(sensors, clutch);
             action.gear = gear;
             action.steering = steer;
-            action.accelerate = 1.0;
+            action.accelerate = 0.5;
             action.brake = 0;
             action.clutch = clutch;
             System.out.println("Auto bloccata, ciclo: " + cicliRecupero);

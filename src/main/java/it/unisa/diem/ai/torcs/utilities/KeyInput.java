@@ -10,6 +10,7 @@ public class KeyInput {
     public static boolean left = false;   // 'A'
     public static boolean right = false;  // 'D'
     public static boolean brake = false;  // 'Space'
+    public static boolean logRecovery = false;
 
     //debug disperato
     public static void print() {

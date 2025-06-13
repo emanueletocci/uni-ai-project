@@ -1,4 +1,5 @@
 package it.unisa.diem.ai.torcs.controllers;
+import it.unisa.diem.ai.torcs.utilities.ContinuousCharReaderUI;
 
 import it.unisa.diem.ai.torcs.model.ClassLabel;
 import it.unisa.diem.ai.torcs.sensors.MessageBasedSensorModel;
@@ -75,10 +76,11 @@ public class HumanDriver extends BaseDriver {
         }
 
         // Logging dati normalizzati e class label (per behavioral cloning)
-        int classLabel = ClassLabel.calculateLabel(action).getCode();
-        double[] features = FeatureNormalizer.extractAndNormalizeFeatures(track, trackPos, angle, speedX);
-        logger.log(features, classLabel);
-
+        if (KeyInput.logRecovery) {
+            int classLabel = ClassLabel.calculateLabel(action).getCode();
+            double[] features = FeatureNormalizer.extractAndNormalizeFeatures(track, trackPos, angle, speedX);
+            logger.log(features, classLabel);
+        }
         return action;
     }
 
