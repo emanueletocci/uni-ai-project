@@ -7,8 +7,7 @@ import java.util.List;
 
 public class Dataset {
     private final List<Sample> samples;
-    private final String firstLineOfTheFile = "SPEEDX;SPEEDY;ANGLE_TO_TRACK_AXIS;TRACK_POSITION;TRACK_EDGE_SENSOR_4;TRACK_EDGE_SENSOR_6;TRACK_EDGE_SENSOR_8;TRACK_EDGE_SENSOR_9;TRACK_EDGE_SENSOR_10;TRACK_EDGE_SENSOR_12;TRACK_EDGE_SENSOR_14;Label\n";
-
+    private final String FIRST_FILE_LINE = SensorFeature.csvHeader();
     public Dataset() {
         this.samples = new ArrayList<>();
     }
@@ -26,25 +25,48 @@ public class Dataset {
     }
 
     // Carica il dataset da file CSV
-    public static Dataset loadFromCSV(String filePath){
+    public static Dataset loadFromCSV(String filePath) {
         Dataset dataset = new Dataset();
-        try(BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+        String expectedHeader = SensorFeature.csvHeader();
+        int expectedColumns = expectedHeader.split(";").length;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
+            int lineNumber = 0;
             while ((line = br.readLine()) != null) {
-                if (line.startsWith(dataset.firstLineOfTheFile)) continue;
-                dataset.addSample(new Sample(line));
+                lineNumber++;
+                line = line.trim();
+                if (line.isEmpty()) continue; // Skip empty lines
+                if (lineNumber == 1) {
+                    // Skip header, but optionally check it
+                    if (!line.equals(expectedHeader)) {
+                        System.err.println("Warning: header does not match expected format!");
+                    }
+                    continue;
+                }
+                String[] tokens = line.split(";");
+                if (tokens.length != expectedColumns) {
+                    System.err.println("Skipping malformed line " + lineNumber + ": wrong number of columns (" + tokens.length + " instead of " + expectedColumns + ")");
+                    continue;
+                }
+                try {
+                    dataset.addSample(new Sample(line));
+                } catch (Exception e) {
+                    System.err.println("Skipping malformed line " + lineNumber + ": " + e.getMessage());
+                }
             }
-            br.close();
-            return dataset;
         } catch (IOException e) {
             e.printStackTrace();
         }
         return dataset;
     }
 
+
     // Salva il dataset su file CSV
     public void saveToCSV(String filePath) {
         try(BufferedWriter bw = new BufferedWriter(new FileWriter(filePath))){
+            bw.write(FIRST_FILE_LINE);
+            bw.newLine();
             for (Sample sample : samples) {
                 bw.write(sample.toCSV());
                 bw.newLine();

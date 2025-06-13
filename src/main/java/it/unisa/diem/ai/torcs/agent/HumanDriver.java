@@ -5,10 +5,8 @@ import it.unisa.diem.ai.torcs.model.Action;
 import it.unisa.diem.ai.torcs.utils.FeatureExtractor;
 import it.unisa.diem.ai.torcs.model.KeyInput;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import it.unisa.diem.ai.torcs.io.ContinuousCharReaderUI;
+import it.unisa.diem.ai.torcs.utils.FeatureNormalizer;
 import it.unisa.diem.ai.torcs.utils.RadarVisualizer;
 
 import javax.swing.*;
@@ -60,16 +58,16 @@ public class HumanDriver extends Controller {
         SwingUtilities.invokeLater(ContinuousCharReaderUI::new);
         SwingUtilities.invokeLater(() -> RadarVisualizer.showRadar(radar));
     }
-    private BufferedWriter writer;
+    private Dataset rawDataset; // Dataset grezzo
+    private Dataset dataset;    // Dataset normalizzato
     private final FeatureExtractor extractor;
+    private final FeatureNormalizer normalizer;
 
     public HumanDriver() {
-        try {
-            writer = new BufferedWriter(new FileWriter("data/dataset.csv", true));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        rawDataset = new Dataset();
+        dataset = new Dataset();
         extractor = new FeatureExtractor();
+
     }
 
     @Override
@@ -78,36 +76,31 @@ public class HumanDriver extends Controller {
         Action action = new Action();
         action.accelerate = KeyInput.up ? 1.0 : 0.0;
         action.brake = KeyInput.brake ? filterABS(sensors, 1f) : 0.0;
-        action.steering = KeyInput.left ? 1.0 : (KeyInput.right ? -1.0 : 0.0);
-        action.gear = KeyInput.down ? -1 : 1; // esempio: S = retromarcia, altrimenti avanti
+        action.steering = KeyInput.left ? 0.3f : (KeyInput.right ? -0.3f : 0.0);
 
-        action.clutch = clutching(sensors, (float) action.clutch);
-        action.gear = getGear(sensors);
+        // Gestione manuale della retromarcia (KeyInput.down)
+        if (KeyInput.down && sensors.getSpeed() < 5.0) {
+            action.gear = -1;
+        } else {
+            action.gear = getGear(sensors); // Cambio automatico\
+            action.clutch = clutching(sensors, (float) action.clutch);
+        }
+
         // 2. Estrai le feature dai sensori
-        Feature feature = extractor.extractFeatures(sensors);
+        FeatureVector feature = extractor.extractFeatures(sensors);
 
         // 3. Discretizza l'azione in una label
         Label label = Label.fromAction(action);
 
         Sample sample = new Sample(feature, label);
-
-        // 4. Salva il sample sul csv
-        try {
-            writer.write(sample.toCSV());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        rawDataset.addSample(sample);
 
         return action;
     }
 
     @Override
     public void shutdown() {
-        try {
-            if (writer != null) writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        rawDataset.saveToCSV("data/raw_dataset.csv");
     }
 
     @Override

@@ -36,4 +36,16 @@ public enum Label {
         // Altrimenti avanti dritto
         return AVANTI_DRITTO;
     }
+
+    @Override
+    public String toString() {
+        return switch (this) {
+            case AVANTI_SINISTRA -> "Avanti Sinistra";
+            case AVANTI_DRITTO -> "Avanti Dritto";
+            case AVANTI_DESTRA -> "Avanti Destra";
+            case FRENA -> "Frena";
+            case RETROMARCIA -> "Retromarcia";
+            default -> throw new IllegalArgumentException("Label sconosciuta");
+        };
+    }
 }

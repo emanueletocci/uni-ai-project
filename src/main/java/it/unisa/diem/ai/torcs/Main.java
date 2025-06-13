@@ -8,7 +8,7 @@ import it.unisa.diem.ai.torcs.model.Sample;
 public class Main {
     public static void main(String[] args) {
         // Carica il dataset e dividi in training/test set
-        Dataset dataset = Dataset.loadFromCSV("data/dataset.csv");
+        Dataset dataset = Dataset.loadFromCSV("data/raw_dataset.csv");
         dataset.shuffle();
         Dataset[] split = dataset.split(0.8); // 80% training, 20% test
         Dataset trainingSet = split[0];

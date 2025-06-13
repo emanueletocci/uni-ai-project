@@ -3,10 +3,10 @@ package it.unisa.diem.ai.torcs.model;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Feature {
+public class FeatureVector {
     private List<Double> values;
 
-    public Feature(List<Double> values) {
+    public FeatureVector(List<Double> values) {
         this.values = new ArrayList<>(values);
     }
 
@@ -33,7 +33,7 @@ public class Feature {
     /**
      * Calcola la distanza euclidea tra questo oggetto Feature e un altro.
      */
-    public double distanzaEuclidea(Feature altra) {
+    public double distanzaEuclidea(FeatureVector altra) {
         if (this.values.size() != altra.values.size()) {
             throw new IllegalArgumentException("I vettori delle feature devono avere la stessa dimensione");
         }

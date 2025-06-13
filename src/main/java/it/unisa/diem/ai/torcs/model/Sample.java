@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Sample {
-    private final Feature feature;
+    private final FeatureVector feature;
     private final Label label;
 
-    public Sample(Feature feature, Label label) {
+    public Sample(FeatureVector feature, Label label) {
         this.feature = feature;
         this.label = label;
     }
@@ -20,13 +20,13 @@ public class Sample {
         String[] tokens = csvLine.split(";");
         List<Double> features = new ArrayList<>();
         for (int i = 0; i < tokens.length - 1; i++) {
-            features.add(Double.valueOf(Double.parseDouble(tokens[i].trim())));
+            features.add(Double.parseDouble(tokens[i].trim()));
         }
-        this.feature = new Feature(features);
+        this.feature = new FeatureVector(features);
         this.label = Label.fromCode(Integer.parseInt(tokens[tokens.length - 1].trim()));
     }
 
-    public Feature getFeature() {
+    public FeatureVector getFeature() {
         return feature;
     }
 
@@ -49,12 +49,13 @@ public class Sample {
      */
     public String toCSV() {
         StringBuilder sb = new StringBuilder();
-        List<Double> vals = feature.getValues();
-        for (Double val : vals) {
+        for (Double val : feature.getValues()) {
             sb.append(val);
             sb.append(";");
         }
         sb.append(label.getCode());
+        sb.append(";");
+        sb.append(label);
         return sb.toString();
     }
 }
