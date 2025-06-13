@@ -38,7 +38,7 @@ public class HumanDriver extends Controller {
     final float absMinSpeed = (float) 3.0;
 
     /* Costanti da stringere */
-    final float clutchMax = (float) 0.5;
+    final float CLUTCH_MAX = (float) 0.5;
     final float clutchDelta = (float) 0.05;
     final float clutchRange = (float) 0.82;
     final float clutchDeltaTime = (float) 0.02;
@@ -77,17 +77,41 @@ public class HumanDriver extends Controller {
 
         // 1. Leggi i comandi dalla tastiera (KeyInput)
         Action action = new Action();
-        action.accelerate = KeyInput.up ? 1.0 : 0.0;
-        action.brake = KeyInput.brake ? filterABS(sensors, 1f) : 0.0;
-        action.steering = KeyInput.left ? 0.3f : (KeyInput.right ? -0.3f : 0.0);
+        double speedX = sensors.getSpeed();
 
-        // Gestione manuale della retromarcia (KeyInput.down)
-        if (KeyInput.down && sensors.getSpeed() < 5.0) {
-            action.gear = -1;
+        // Gestione accelerazione, frenata, retromarcia
+        if (KeyInput.brake) {
+            frena(action, sensors);
+        } else if (KeyInput.down && speedX < 5.0) {
+            retromarcia(action, sensors);
+        } else if (KeyInput.up) {
+            accelera(action, sensors);
         } else {
-            action.gear = getGear(sensors); // Cambio automatico\
+            // Nessun comando di accelerazione o frenata
+            action.accelerate = 0.0;
+            action.brake = 0.0;
         }
+
+        // Gestione sterzata (sovrascrive solo lo sterzo)
+        if (KeyInput.left && !KeyInput.right) {
+            giraSinistra(action, sensors);
+        } else if (KeyInput.right && !KeyInput.left) {
+            giraDestra(action, sensors);
+        } else {
+            // Nessuna sterzata o sterzo centrato
+            action.steering = 0.0;
+        }
+
+        // Cambio marcia automatico solo se non in retromarcia
+        if (action.gear != -1) {
+            action.gear = getGear(sensors);
+        }
+
+        // Gestione clutch e ABS (opzionale, puoi riutilizzare i tuoi metodi)
         action.clutch = clutching(sensors, (float) action.clutch);
+        if (action.brake > 0) {
+            action.brake = filterABS(sensors, (float) action.brake);
+        }
 
         // Discretizza l'azione in una label
         Label label = Label.fromAction(action);
@@ -118,6 +142,41 @@ public class HumanDriver extends Controller {
     @Override
     public void reset() {
         // Eventuale logica di reset
+    }
+
+    private void accelera(Action action, SensorModel sensors) {
+        action.accelerate = 1.0;
+        action.brake = 0.0;
+        action.steering = 0f;
+        action.clutch = clutching(sensors, (float) action.clutch);
+        action.gear = getGear(sensors);
+    }
+
+    private void frena(Action action, SensorModel sensors) {
+        action.brake = filterABS(sensors, 1f);
+        action.clutch = clutching(sensors, (float) action.clutch);
+        action.gear = getGear(sensors);
+        action.accelerate = 0.0f;
+        // Puoi aggiungere logica ABS qui o lasciare il filtro nel control()
+    }
+
+    private void retromarcia(Action action, SensorModel sensors) {
+        action.gear = -1;
+        action.accelerate = 1.0f;
+        action.brake = 0.0;
+        action.clutch = CLUTCH_MAX;
+    }
+
+    private void giraSinistra(Action action, SensorModel sensors) {
+        action.clutch = clutching(sensors, (float) action.clutch);
+        action.gear = getGear(sensors);
+        action.steering = 0.3f;
+    }
+
+    private void giraDestra(Action action, SensorModel sensors) {
+        action.clutch = clutching(sensors, (float) action.clutch);
+        action.gear = getGear(sensors);
+        action.steering = -0.3f;
     }
 
     private float filterABS(SensorModel sensors, float brake) {
@@ -151,7 +210,7 @@ public class HumanDriver extends Controller {
 
     float clutching(SensorModel sensors, float clutch) {
 
-        float maxClutch = clutchMax;
+        float maxClutch = CLUTCH_MAX;
 
         // Controlla se la situazione attuale è l'inizio della gara
         if (sensors.getCurrentLapTime() < clutchDeltaTime && getStage() == Stage.RACE

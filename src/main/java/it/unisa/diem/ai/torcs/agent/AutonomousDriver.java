@@ -8,9 +8,7 @@ public class AutonomousDriver extends Controller {
     private final FeatureExtractor extractor;
     private final FeatureNormalizer normalizer;
     private final NearestNeighbor knn;
-    private final int K = 1; // o il valore ottimale scelto
-// Aggiungi queste costanti e metodi nella tua classe AutonomousDriver
-// (ad esempio sotto i campi FeatureExtractor e FeatureNormalizer)
+    private final int K = 10; // o il valore ottimale scelto
 
     /* Costanti di cambio marcia */
     private static final int[] GEAR_UP = {5000, 6000, 6000, 6500, 7000, 0};
@@ -40,7 +38,7 @@ public class AutonomousDriver extends Controller {
 
     public AutonomousDriver() {
         // Carica dataset e normalizzatore
-        Dataset trainingSet = Dataset.loadFromCSV("data/raw_dataset.csv");
+        Dataset trainingSet = Dataset.loadFromCSV("data/dataset_normalizzato.csv");
         normalizer = new FeatureNormalizer();
         extractor = new FeatureExtractor();
         knn = new NearestNeighbor(trainingSet);
@@ -55,7 +53,7 @@ public class AutonomousDriver extends Controller {
         FeatureVector normalizedFeatures = normalizer.normalize(rawFeatures);
 
         // 3. Crea un Sample "dummy" da classificare (label non serve)
-        Sample testSample = new Sample(rawFeatures, null);
+        Sample testSample = new Sample(normalizedFeatures, null);
 
         // 4. Predici la label tramite il classificatore KNN
         int predictedClass = knn.classify(testSample, K);
@@ -67,12 +65,10 @@ public class AutonomousDriver extends Controller {
 
         if(sensors.getTrackPosition() > 1.0){
             System.out.println("Fuori pista a sinistra");
-            action.steering = -0.5;
-            action.accelerate = 0.5;
+            giraDestra(action, sensors);
         } else if(sensors.getTrackPosition() < -1.0){
             System.out.println("Fuori pista a destra");
-            action.steering = 0.5;
-            action.accelerate = 0.5;
+            giraSinistra(action, sensors);
         }
 
         return action;
@@ -86,37 +82,58 @@ public class AutonomousDriver extends Controller {
 
         switch (label) {
             case AVANTI_SINISTRA:
-                action.accelerate = 0.8;
-                action.steering = 0.3f;
-                action.clutch = clutching(sensors, (float) action.clutch);
-                action.gear = getGear(sensors);
+                giraSinistra(action, sensors);
                 break;
             case AVANTI_DRITTO:
-                action.accelerate = 1.0;
-                action.steering = 0f;
-                action.clutch = clutching(sensors, (float) action.clutch);
-                action.gear = getGear(sensors);
+                accelera(action, sensors);
                 break;
             case AVANTI_DESTRA:
-                action.accelerate = 0.8;
-                action.steering = -0.3f;
-                action.clutch = clutching(sensors, (float) action.clutch);
-                action.gear = getGear(sensors);
+                giraDestra(action, sensors);
                 break;
             case FRENA:
-                action.brake = filterABS(sensors, 1f);
-                action.clutch = clutching(sensors, (float) action.clutch);
-                action.gear = getGear(sensors);
+                frena(action, sensors);
                 break;
             case RETROMARCIA:
-                action.gear = -1;
-                action.accelerate = 1.0;
-                action.clutch = CLUTCH_MAX;
-
+                retromarcia(action, sensors);
                 break;
         }
         // Puoi aggiungere logica per frizione, ABS, ecc.
         return action;
+    }
+
+    private void accelera(Action action, SensorModel sensors) {
+        action.accelerate = 1.0;
+        action.brake = 0.0;
+        action.steering = 0f;
+        action.clutch = clutching(sensors, (float) action.clutch);
+        action.gear = getGear(sensors);
+    }
+
+    private void frena(Action action, SensorModel sensors) {
+        action.brake = filterABS(sensors, 1f);
+        action.clutch = clutching(sensors, (float) action.clutch);
+        action.gear = getGear(sensors);
+        action.accelerate = 0.0f;
+        // Puoi aggiungere logica ABS qui o lasciare il filtro nel control()
+    }
+
+    private void retromarcia(Action action, SensorModel sensors) {
+        action.gear = -1;
+        action.accelerate = 1.0f;
+        action.brake = 0.0;
+        action.clutch = CLUTCH_MAX;
+    }
+
+    private void giraSinistra(Action action, SensorModel sensors) {
+        action.clutch = clutching(sensors, (float) action.clutch);
+        action.gear = getGear(sensors);
+        action.steering = 0.3f;
+    }
+
+    private void giraDestra(Action action, SensorModel sensors) {
+        action.clutch = clutching(sensors, (float) action.clutch);
+        action.gear = getGear(sensors);
+        action.steering = -0.3f;
     }
 
     private int getGear(SensorModel sensors) {

@@ -18,9 +18,6 @@ public class FeatureExtractor {
                 case SPEED_X:
                     features.add(sensors.getSpeed());
                     break;
-                case SPEED_Y:
-                    features.add(sensors.getLateralSpeed());
-                    break;
                 case ANGLE_TO_TRACK_AXIS:
                     features.add(sensors.getAngleToTrackAxis());
                     break;
