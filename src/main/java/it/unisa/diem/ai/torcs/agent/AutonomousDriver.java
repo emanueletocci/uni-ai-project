@@ -10,6 +10,9 @@ public class AutonomousDriver extends Controller {
     private final NearestNeighbor knn;
     private final int K = 10; // o il valore ottimale scelto
 
+    private static final int STUCK_TIME = 25;
+    private static final float STUCK_ANGLE = (float) 0.523598775; // PI/6
+
     /* Costanti di cambio marcia */
     private static final int[] GEAR_UP = {5000, 6000, 6000, 6500, 7000, 0};
     private static final int[] GEAR_DOWN = {0, 2500, 3000, 3000, 3500, 3500};
@@ -35,6 +38,7 @@ public class AutonomousDriver extends Controller {
     private static final float STEER_SENSITIVITY_OFFSET = 80.0f;
     private static final float WHEEL_SENSITIVITY = 1.0f;
 
+    private int stuck = 0;
 
     public AutonomousDriver() {
         // Carica dataset e normalizzatore
@@ -46,32 +50,59 @@ public class AutonomousDriver extends Controller {
 
     @Override
     public Action control(SensorModel sensors) {
-        // 1. Estrai le feature dal sensore
-        FeatureVector rawFeatures = extractor.extractFeatures(sensors);
+        double angle = sensors.getAngleToTrackAxis();
 
-        // 2. Normalizza le feature
-        FeatureVector normalizedFeatures = normalizer.normalize(rawFeatures);
-
-        // 3. Crea un Sample "dummy" da classificare (label non serve)
-        Sample testSample = new Sample(normalizedFeatures, null);
-
-        // 4. Predici la label tramite il classificatore KNN
-        int predictedClass = knn.classify(testSample, K);
-        Label predictedLabel = Label.fromCode(predictedClass);
-        System.out.println("Predicted class: " + predictedLabel);
-
-        // 5. Mappa la label in un oggetto Action
-        Action action = labelToAction(predictedLabel, sensors);
-
-        if(sensors.getTrackPosition() > 1.0){
-            System.out.println("Fuori pista a sinistra");
-            giraDestra(action, sensors);
-        } else if(sensors.getTrackPosition() < -1.0){
-            System.out.println("Fuori pista a destra");
-            giraSinistra(action, sensors);
+        if(Math.abs(angle) > STUCK_ANGLE) {
+            stuck++;
+        } else {
+            stuck = 0; // Reset se non è bloccato
         }
 
-        return action;
+        // AUTO BLOCCATA
+        if(stuck > STUCK_TIME) {
+            Action action = new Action();
+            System.out.println("Auto bloccata per: " + stuck + " turni, correzione in corso...");
+            float steer = (float) (-sensors.getAngleToTrackAxis() / STEER_LOCK);
+            int gear = -1;
+            if (sensors.getAngleToTrackAxis() * sensors.getTrackPosition() > 0) {
+                gear = 1;
+                steer = -steer;
+            }
+            action.gear = gear;
+            action.steering = steer;
+            action.accelerate = 1.0;
+            action.brake = 0;
+            action.clutch = clutching(sensors, CLUTCH_MAX);
+
+            return action;
+        } else {
+            // 1. Estrai le feature dal sensore
+            FeatureVector rawFeatures = extractor.extractFeatures(sensors);
+
+            // 2. Normalizza le feature
+            FeatureVector normalizedFeatures = normalizer.normalize(rawFeatures);
+
+            // 3. Crea un Sample "dummy" da classificare (label non serve)
+            Sample testSample = new Sample(normalizedFeatures, null);
+
+            // 4. Predici la label tramite il classificatore KNN
+            int predictedClass = knn.classify(testSample, K);
+            Label predictedLabel = Label.fromCode(predictedClass);
+            System.out.println("Predicted class: " + predictedLabel);
+
+            // 5. Mappa la label in un oggetto Action
+            Action action = labelToAction(predictedLabel, sensors);
+
+            if(sensors.getTrackPosition() > 1.0){
+                System.out.println("Fuori pista a sinistra");
+                giraDestra(action, sensors);
+            } else if(sensors.getTrackPosition() < -1.0){
+                System.out.println("Fuori pista a destra");
+                giraSinistra(action, sensors);
+            }
+
+            return action;
+        }
     }
 
     /**
@@ -97,7 +128,6 @@ public class AutonomousDriver extends Controller {
                 retromarcia(action, sensors);
                 break;
         }
-        // Puoi aggiungere logica per frizione, ABS, ecc.
         return action;
     }
 
@@ -114,7 +144,6 @@ public class AutonomousDriver extends Controller {
         action.clutch = clutching(sensors, (float) action.clutch);
         action.gear = getGear(sensors);
         action.accelerate = 0.0f;
-        // Puoi aggiungere logica ABS qui o lasciare il filtro nel control()
     }
 
     private void retromarcia(Action action, SensorModel sensors) {

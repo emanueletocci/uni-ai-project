@@ -14,7 +14,7 @@ public class FeatureNormalizer {
 
     /** Velocità longitudinale minima e massima dell’auto (speedX, in km/h). */
     public static final double MIN_SPEED_X = 0.0;
-    public static final double MAX_SPEED_X = 290.0;
+    public static final double MAX_SPEED_X = 300.0;
 
     /** Velocità massima in retromarcia (in modulo, km/h). */
     public static final double MIN_NEGATIVE_SPEED = 0.001;
@@ -67,8 +67,6 @@ public class FeatureNormalizer {
      * Normalizzatore min-max con clipping tra 0 e 1.
      */
     private static double normalizzatoreMinMax(double data, double min, double max) {
-        if (max == min) return 0.0;
-        double norm = (data - min) / (max - min);
-        return Math.max(0.0, Math.min(1.0, norm));
+        return (data-min)/(max-min);
     }
 }
