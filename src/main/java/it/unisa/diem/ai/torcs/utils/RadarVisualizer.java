@@ -1,4 +1,9 @@
+package it.unisa.diem.ai.torcs.utils;
+
 import it.unisa.diem.ai.torcs.model.SensorFeature;
+
+import javax.swing.*;
+import java.awt.*;
 import java.util.List;
 
 public class RadarVisualizer extends JPanel {
