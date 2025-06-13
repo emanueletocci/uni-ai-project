@@ -57,44 +57,36 @@ public class AutonomousDriver extends BaseDriver {
             // 4. Predici la label tramite il classificatore KNN
             // o il valore ottimale scelto
 
-            int k = 5;
+            int k = 7;
             int predictedClass = knn.classify(testSample, k);
             Label predictedLabel = Label.fromCode(predictedClass);
             System.out.println("Predicted class: " + predictedLabel);
 
             // 5. Mappa la label in un oggetto Action
-            labelToAction(predictedLabel, sensors);
+            action.reset();
+            switch (predictedLabel) {
+                case GIRA_SINISTRA:
+                    giraSinistra(action, sensors);
+                    break;
+                case ACCELERA:
+                    accelera(action, sensors);
+                    break;
+                case GIRA_DESTRA:
+                    giraDestra(action, sensors);
+                    break;
+                case FRENA:
+                    frena(action, sensors);
+                    break;
+                case RETROMARCIA:
+                    retromarcia(action, sensors);
+                    break;
+                default:
+                    /// DECELERAZIONE
+                    decelera(action, sensors);
+                    break;
+            }
         }
 
-        return action;
-    }
-
-    /**
-     * Mappa una label predetta in un oggetto Action da inviare a TORCS.
-     */
-    private Action labelToAction(Label label, SensorModel sensors) {
-        action.reset();
-        switch (label) {
-            case GIRA_SINISTRA:
-                giraSinistra(action, sensors);
-                break;
-            case ACCELERA:
-                accelera(action, sensors);
-                break;
-            case GIRA_DESTRA:
-                giraDestra(action, sensors);
-                break;
-            case FRENA:
-                frena(action, sensors);
-                break;
-            case RETROMARCIA:
-                retromarcia(action, sensors);
-                break;
-            default:
-                /// DECELERAZIONE
-                decelera(action, sensors);
-                break;
-        }
         return action;
     }
 

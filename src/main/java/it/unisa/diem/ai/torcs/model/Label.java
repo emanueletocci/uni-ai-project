@@ -19,32 +19,29 @@ public enum Label {
 
     // Metodo statico per la discretizzazione, ottengo una label a partire da un'azione
     public static Label fromAction(Action action) {
-        // Priorità 1: Retromarcia
-        if (action.gear == -1) {
+        // Priorità 1: retromarcia
+        if (action.gear == -1 && action.accelerate > 0)
             return RETROMARCIA;
-        }
 
-        // Priorità 2: Frenata
-        if (action.brake > 0.3) {
+        // Priorità 2: frenata
+        if (action.brake > 0.2f)
             return FRENA;
-        }
 
-        // Priorità 3: Sterzate
-        if (action.steering < -0.1) {
+        if (action.steering >= 0.2f)
             return GIRA_SINISTRA;
-        }
-        if (action.steering > 0.1) {
+
+        if (action.steering <= -0.2f)
             return GIRA_DESTRA;
-        }
 
-        // Priorità 4: Accelerazione sostenuta
-        if (action.accelerate > 0.7) {
+        // Priorità 4: accelerazione forte
+        if (action.accelerate >= 0.7f)
             return ACCELERA;
-        }
 
-        // Altrimenti avanti dritto
+
+        // Fallback: DECELERAZIONE (bassa accelerazione, sterzo neutro)
         return DECELERAZIONE;
     }
+
 
     @Override
     public String toString() {
