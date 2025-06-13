@@ -65,17 +65,16 @@ public class AutonomousDriver extends Controller {
         // 5. Mappa la label in un oggetto Action
         Action action = labelToAction(predictedLabel, sensors);
 
-        if(sensors.getTrackPosition() > 1){
+        if(sensors.getTrackPosition() > 1.0){
             System.out.println("Fuori pista a sinistra");
-            // Rientro a destra
-            action.steering = -0.25d;
-            action.accelerate = 0.3d;
-        } else if(sensors.getTrackPosition() < 1){
+            action.steering = -0.5;
+            action.accelerate = 0.5;
+        } else if(sensors.getTrackPosition() < -1.0){
             System.out.println("Fuori pista a destra");
-            // Rientro a sinistra
-            action.steering = 0.25d;
-            action.accelerate = 0.3d;
+            action.steering = 0.5;
+            action.accelerate = 0.5;
         }
+
         return action;
     }
 
