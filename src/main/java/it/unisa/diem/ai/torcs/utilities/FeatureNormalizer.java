@@ -37,12 +37,6 @@ public class FeatureNormalizer {
     public static final double MIN_ANGLE_TO_TRACK_AXIS = -Math.PI;
     public static final double MAX_ANGLE_TO_TRACK_AXIS = Math.PI;
 
-    /** Indici dei sensori di bordo pista usati, in base all'enum FeatureType. */
-    public static final int[] SENSOR_INDICES = FeatureType.getTrackSensorIndices()
-            .stream()
-            .mapToInt(Integer::intValue)
-            .toArray();
-
     // --- METODI DI NORMALIZZAZIONE ---
 
     /**
@@ -54,10 +48,9 @@ public class FeatureNormalizer {
      * @return Valore normalizzato in [0, 1].
      */
     private static double normalizzatoreMinMax(double data, Double min, Double max) {
-        if (max == null || min == null || max.equals(min))
-            return 0.0;
-        data = Math.max(min, Math.min(max, data)); // Clipping
-        return (data - min) / (max - min);
+        if (max == min) return 0.0; // evita divisione per 0
+        double norm = (data - min) / (max - min);
+        return Math.max(0.0, Math.min(1.0, norm)); // clipping
     }
 
     /**

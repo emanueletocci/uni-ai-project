@@ -1,6 +1,7 @@
 package it.unisa.diem.ai.torcs.controllers;
 
 import it.unisa.diem.ai.torcs.model.ClassLabel;
+import it.unisa.diem.ai.torcs.model.FeatureType;
 import it.unisa.diem.ai.torcs.sensors.SensorModel;
 import it.unisa.diem.ai.torcs.Action;
 import it.unisa.diem.ai.torcs.utilities.*;
@@ -15,10 +16,13 @@ public class HumanDriver extends BaseDriver {
     }
 
     private final DataLogger logger;
+    private final DataLogger rawLogger;
+
 
     public HumanDriver() {
         super();
         logger = new DataLogger("data/dataset.csv");
+        rawLogger = new DataLogger("data/raw_data.csv");
     }
 
     @Override
@@ -58,8 +62,11 @@ public class HumanDriver extends BaseDriver {
 
         // Logging dati normalizzati e class label (per behavioral cloning)
         int classLabel = ClassLabel.calculateLabel(action).getCode();
-        double[] features = FeatureNormalizer.extractAndNormalizeFeatures(track, trackPos, angle, speedX, speedY);
-        logger.log(features, classLabel);
+
+        rawLogger.logFeaturesRaw(track, trackPos, angle, speedX, speedY, classLabel);
+
+        double[] featuresNormalizzate = FeatureNormalizer.extractAndNormalizeFeatures(track, trackPos, angle, speedX, speedY);
+        logger.logFeaturesNormalizzate(featuresNormalizzate, classLabel);
 
         detectSensorAnomalies(track);
 

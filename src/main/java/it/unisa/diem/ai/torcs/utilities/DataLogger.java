@@ -35,17 +35,70 @@ public class DataLogger {
     /**
      * Logga un vettore di feature (ordine: FeatureType.values()) e la classe.
      */
-    public void log(double[] featuresVector, int classLabel) {
+    public void logFeaturesNormalizzate(double[] featuresVector, int classLabel) {
         if (featuresVector.length != FeatureType.values().length) {
             System.err.println("Errore: il vettore delle feature deve contenere " + FeatureType.values().length + " elementi.");
             return;
         }
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename, true))) {
             for (double v : featuresVector) {
-                bw.write(String.format(Locale.ROOT, "%.4f;", v));            }
+                bw.write(String.format(Locale.ROOT, "%.4f;", v));
+            }
             bw.write(classLabel + "\n");
         } catch (IOException e) {
             System.err.println("Errore scrittura CSV: " + e.getMessage());
         }
     }
+
+    /**
+     * Logga i valori grezzi (non normalizzati) delle feature definite in FeatureType, più la classe.
+     *
+     * @param track     Vettore dei 19 sensori di bordo pista.
+     * @param trackPos  Posizione laterale sulla pista.
+     * @param angle     Angolo rispetto all’asse della pista.
+     * @param speedX    Velocità longitudinale.
+     * @param speedY    Velocità laterale.
+     * @param classLabel Etichetta della classe da associare a queste feature.
+     */
+    public void logFeaturesRaw(double[] track, double trackPos, double angle, double speedX, double speedY, int classLabel) {
+        double[] features = new double[FeatureType.values().length];
+
+        for (FeatureType feature : FeatureType.values()) {
+            Integer trackIndex = feature.getTrackIndex();
+            int idx = feature.ordinal();
+
+            if (trackIndex != null) {
+                features[idx] = track[trackIndex];
+            } else {
+                switch (feature) {
+                    case SPEEDX:
+                        features[idx] = speedX;
+                        break;
+                    case SPEEDY:
+                        features[idx] = speedY;
+                        break;
+                    case ANGLE_TO_TRACK_AXIS:
+                        features[idx] = angle;
+                        break;
+                    case TRACK_POSITION:
+                        features[idx] = trackPos;
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Feature non riconosciuta: " + feature);
+                }
+            }
+        }
+
+        // Scrittura su file
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename, true))) {
+            for (double v : features) {
+                bw.write(String.format(Locale.ROOT, "%.4f;", v));
+            }
+            bw.write(classLabel + "\n");
+        } catch (IOException e) {
+            System.err.println("Errore scrittura CSV (raw): " + e.getMessage());
+        }
+    }
+
+
 }

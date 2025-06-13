@@ -68,7 +68,7 @@ public class SimpleDriver extends BaseDriver {
 
         int classLabel = ClassLabel.calculateLabel(action).getCode();
         double[] features = FeatureNormalizer.extractAndNormalizeFeatures(track, trackPos, angle, speedX, speedY);
-        logger.log(features, classLabel);
+        logger.logFeaturesNormalizzate(features, classLabel);
 
         return action;
     }

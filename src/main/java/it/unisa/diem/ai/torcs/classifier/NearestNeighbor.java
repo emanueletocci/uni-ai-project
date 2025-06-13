@@ -27,6 +27,7 @@ public class NearestNeighbor {
      */
     public NearestNeighbor(String filename) {
         this.trainingData = new ArrayList<>();
+        this.kdtree = null;
         this.classCounts = new int[ClassLabel.values().length];
         this.readPointsFromCSV(filename);
     }
