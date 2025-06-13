@@ -160,6 +160,28 @@ public abstract class BaseDriver extends Controller{
     }
 
     @Override
+    public float[] initAngles() {
+
+        float[] angles = new float[19];
+
+        /*
+         * set angles as
+         * {-90,-75,-60,-45,-30,-20,-15,-10,-5,0,5,10,15,20,30,45,60,75,90}
+         */
+        for (int i = 0; i < 5; i++) {
+            angles[i] = -90 + i * 15;
+            angles[18 - i] = 90 - i * 15;
+        }
+
+        for (int i = 5; i < 9; i++) {
+            angles[i] = -20 + (i - 5) * 5;
+            angles[18 - i] = 20 - (i - 5) * 5;
+        }
+        angles[9] = 0;
+        return angles;
+    }
+
+    @Override
     public void reset() {
         System.out.println("Restarting the race!");
     }
