@@ -59,19 +59,22 @@ public class HumanDriver extends Controller {
         SwingUtilities.invokeLater(() -> RadarVisualizer.showRadar(radar));
     }
     private Dataset rawDataset; // Dataset grezzo
-    private Dataset dataset;    // Dataset normalizzato
+    private Dataset datasetNormalizzato;    // Dataset normalizzato
     private final FeatureExtractor extractor;
     private final FeatureNormalizer normalizer;
 
     public HumanDriver() {
         rawDataset = new Dataset();
-        dataset = new Dataset();
+        datasetNormalizzato = new Dataset();
         extractor = new FeatureExtractor();
+        normalizer = new FeatureNormalizer();
 
     }
 
     @Override
     public Action control(SensorModel sensors) {
+        radar.updateSensors(sensors.getTrackEdgeSensors());
+
         // 1. Leggi i comandi dalla tastiera (KeyInput)
         Action action = new Action();
         action.accelerate = KeyInput.up ? 1.0 : 0.0;
@@ -83,24 +86,33 @@ public class HumanDriver extends Controller {
             action.gear = -1;
         } else {
             action.gear = getGear(sensors); // Cambio automatico\
-            action.clutch = clutching(sensors, (float) action.clutch);
         }
+        action.clutch = clutching(sensors, (float) action.clutch);
 
-        // 2. Estrai le feature dai sensori
-        FeatureVector feature = extractor.extractFeatures(sensors);
-
-        // 3. Discretizza l'azione in una label
+        // Discretizza l'azione in una label
         Label label = Label.fromAction(action);
 
-        Sample sample = new Sample(feature, label);
-        rawDataset.addSample(sample);
+        // Estrai le feature dai sensori
+        FeatureVector rawFeatures = extractor.extractFeatures(sensors);
+        FeatureVector featuresNormalizzate = normalizer.normalize(rawFeatures);
 
+        // Filtraggio dei campioni - inserisco solo azioni significative nel dataset
+        if (action.accelerate > 0 || action.brake > 0 || Math.abs(action.steering) > 0.1 || action.gear == -1) {
+            // Inserisci il sample nel dataset
+
+            Sample rawSample = new Sample(rawFeatures, label);
+            rawDataset.addSample(rawSample);
+
+            Sample sampleNormalizzato = new Sample(featuresNormalizzate, label);
+            datasetNormalizzato.addSample(sampleNormalizzato);
+        }
         return action;
     }
 
     @Override
     public void shutdown() {
         rawDataset.saveToCSV("data/raw_dataset.csv");
+        datasetNormalizzato.saveToCSV("data/dataset_normalizzato.csv");
     }
 
     @Override

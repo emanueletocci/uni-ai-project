@@ -47,7 +47,13 @@ public class FeatureNormalizer {
             // Scegli il range in base alla feature
             switch (features[i]) {
                 case SPEED_X:
-                    min = MIN_SPEED_X; max = MAX_SPEED_X; break;
+                    if(val >=0 ){
+                        min = MIN_SPEED_X; max = MAX_SPEED_X;
+                    } else {
+                        // Velocità negativa, usa il range per la retromarcia
+                        min = MIN_NEGATIVE_SPEED; max = MAX_NEGATIVE_SPEED;
+                    }
+                    break;
                 case SPEED_Y:
                     min = MIN_SPEED_Y; max = MAX_SPEED_Y; break;
                 case ANGLE_TO_TRACK_AXIS:

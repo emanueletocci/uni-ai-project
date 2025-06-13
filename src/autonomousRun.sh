@@ -6,4 +6,4 @@
 cd "$(dirname "$0")/.."
 
 # Esegui il programma Java
-java -cp src/classes it.unisa.diem.ai.torcs.comunication.Client it.unisa.diem.ai.torcs.controllers.AutonomousDriver host:100.106.34.171 port:3001
+java -cp src/classes it.unisa.diem.ai.torcs.io.Client it.unisa.diem.ai.torcs.agent.AutonomousDriver host:localhost port:3001

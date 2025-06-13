@@ -45,7 +45,6 @@ public enum Label {
             case AVANTI_DESTRA -> "Avanti Destra";
             case FRENA -> "Frena";
             case RETROMARCIA -> "Retromarcia";
-            default -> throw new IllegalArgumentException("Label sconosciuta");
         };
     }
 }

@@ -2,6 +2,7 @@ package it.unisa.diem.ai.torcs.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class Sample {
     private final FeatureVector feature;
@@ -19,11 +20,14 @@ public class Sample {
     public Sample(String csvLine) {
         String[] tokens = csvLine.split(";");
         List<Double> features = new ArrayList<>();
-        for (int i = 0; i < tokens.length - 1; i++) {
-            features.add(Double.parseDouble(tokens[i].trim()));
+        for (int i = 0; i < tokens.length - 2; i++) { // fino a LABEL_CODE escluso
+            String sanitized = tokens[i].trim().replace(',', '.');
+            features.add(Double.parseDouble(sanitized));
         }
         this.feature = new FeatureVector(features);
-        this.label = Label.fromCode(Integer.parseInt(tokens[tokens.length - 1].trim()));
+        // Prendi la label numerica dalla penultima colonna
+        this.label = Label.fromCode(Integer.parseInt(tokens[tokens.length - 2].trim()));
+        // Ignora completamente tokens[tokens.length - 1] (label testuale)
     }
 
     public FeatureVector getFeature() {
@@ -50,7 +54,7 @@ public class Sample {
     public String toCSV() {
         StringBuilder sb = new StringBuilder();
         for (Double val : feature.getValues()) {
-            sb.append(val);
+            sb.append(String.format(Locale.ITALY, "%.5f", val));
             sb.append(";");
         }
         sb.append(label.getCode());
