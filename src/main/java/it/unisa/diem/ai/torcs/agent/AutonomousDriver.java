@@ -8,7 +8,7 @@ public class AutonomousDriver extends Controller {
     private final FeatureExtractor extractor;
     private final FeatureNormalizer normalizer;
     private final NearestNeighbor knn;
-    private final int K = 3; // o il valore ottimale scelto
+    private final int K = 1; // o il valore ottimale scelto
 // Aggiungi queste costanti e metodi nella tua classe AutonomousDriver
 // (ad esempio sotto i campi FeatureExtractor e FeatureNormalizer)
 
@@ -40,7 +40,7 @@ public class AutonomousDriver extends Controller {
 
     public AutonomousDriver() {
         // Carica dataset e normalizzatore
-        Dataset trainingSet = Dataset.loadFromCSV("data/dataset_normalizzato.csv");
+        Dataset trainingSet = Dataset.loadFromCSV("data/raw_dataset.csv");
         normalizer = new FeatureNormalizer();
         extractor = new FeatureExtractor();
         knn = new NearestNeighbor(trainingSet);
@@ -55,16 +55,27 @@ public class AutonomousDriver extends Controller {
         FeatureVector normalizedFeatures = normalizer.normalize(rawFeatures);
 
         // 3. Crea un Sample "dummy" da classificare (label non serve)
-        Sample testSample = new Sample(normalizedFeatures, null);
+        Sample testSample = new Sample(rawFeatures, null);
 
         // 4. Predici la label tramite il classificatore KNN
         int predictedClass = knn.classify(testSample, K);
         Label predictedLabel = Label.fromCode(predictedClass);
-        System.out.println("Predicted class: " + predictedClass);
+        System.out.println("Predicted class: " + predictedLabel);
 
         // 5. Mappa la label in un oggetto Action
         Action action = labelToAction(predictedLabel, sensors);
 
+        if(sensors.getTrackPosition() > 1){
+            System.out.println("Fuori pista a sinistra");
+            // Rientro a destra
+            action.steering = -0.25d;
+            action.accelerate = 0.3d;
+        } else if(sensors.getTrackPosition() < 1){
+            System.out.println("Fuori pista a destra");
+            // Rientro a sinistra
+            action.steering = 0.25d;
+            action.accelerate = 0.3d;
+        }
         return action;
     }
 
@@ -73,25 +84,23 @@ public class AutonomousDriver extends Controller {
      */
     private Action labelToAction(Label label, SensorModel sensors) {
         Action action = new Action();
-        float speed = (float) (sensors.getSpeed());
-        float steerFactor = Math.max(0.3f, 1.0f - speed / 100.0f); // Adatta la sensibilità
 
         switch (label) {
             case AVANTI_SINISTRA:
                 action.accelerate = 0.8;
-                action.steering = -steerFactor;
+                action.steering = 0.3f;
                 action.clutch = clutching(sensors, (float) action.clutch);
                 action.gear = getGear(sensors);
                 break;
             case AVANTI_DRITTO:
                 action.accelerate = 1.0;
-                action.steering = 0.0;
+                action.steering = 0f;
                 action.clutch = clutching(sensors, (float) action.clutch);
                 action.gear = getGear(sensors);
                 break;
             case AVANTI_DESTRA:
                 action.accelerate = 0.8;
-                action.steering = steerFactor;
+                action.steering = -0.3f;
                 action.clutch = clutching(sensors, (float) action.clutch);
                 action.gear = getGear(sensors);
                 break;
@@ -173,12 +182,5 @@ public class AutonomousDriver extends Controller {
         return clutch;
     }
 
-    private double adjustSteeringBasedOnTrack(SensorModel sensors) {
-        double[] trackSensors = sensors.getTrackEdgeSensors();
-        // Esempio: sterza verso il lato con più spazio libero
-        double leftSpace = trackSensors[8];  // Sensore sinistro
-        double rightSpace = trackSensors[9]; // Sensore destro
-        return (rightSpace - leftSpace) * 0.1f; // Coefficiente aggiustabile
-    }
 
 }
