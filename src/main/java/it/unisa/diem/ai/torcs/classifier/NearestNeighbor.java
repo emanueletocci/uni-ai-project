@@ -1,89 +1,68 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package it.unisa.diem.ai.torcs.classifier;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import it.unisa.diem.ai.torcs.Sample;
-import it.unisa.diem.ai.torcs.model.FeatureType;
 
-import java.io.*;
-import java.util.*;
-
-/**
- * Classificatore basato su K-Nearest Neighbors (KNN) che utilizza un KDTree
- * per velocizzare la ricerca dei vicini più prossimi.
- */
 public class NearestNeighbor {
-    private final List<Sample> trainingData;
-    private KDTree kdtree;
-    private final int[] classCounts;
+    
+    private List<Sample> trainingData;
+    private String firstLineOfTheFile;
 
     public NearestNeighbor(String filename) {
         this.trainingData = new ArrayList<>();
-        this.classCounts = new int[FeatureType.values().length]; // prelevo dinamicamente la dimensione
+        this.firstLineOfTheFile = "Speed; DistanzaLineaCentrale; SensoreSX1; SensoreSX2; SensoreCentrale; SensoreDX1; SensoreDX2; Angolo; Classe";
         this.readPointsFromCSV(filename);
     }
 
     private void readPointsFromCSV(String filename) {
-        int expectedFeatures = FeatureType.values().length + 1; // 12 + 1
-        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
-            reader.readLine(); // Salta header
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filename));
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.trim().isEmpty() || line.contains("track")) continue;
-
-                String[] parts = line.split(";");
-                if (parts.length != expectedFeatures) {
-                    System.err.println("Riga scartata: " + line);
-                    continue;
+                if (line.startsWith(firstLineOfTheFile)) {
+                    continue; // Skip header
                 }
-
-                try {
-                    trainingData.add(new Sample(line));
-                } catch (NumberFormatException e) {
-                    System.err.println("Errore in riga: " + line);
-                }
+                // Add the sample by calling the constructor that takes the string input
+                trainingData.add(new Sample(line));
             }
-            this.kdtree = new KDTree(trainingData);
+            reader.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    /**
-     * Trova i K vicini più prossimi a un punto dato.
-     */
-    public List<Sample> findKNearestNeighbors(Sample testPoint, int k) {
-        return kdtree.kNearestNeighbors(testPoint, k);
+
+    public int classify(Sample targetPoint){
+        if (trainingData.isEmpty()) {
+            System.out.println("training set vuoto");
+
+           return -1; 
+       }
+
+       Sample nearestNeighbor = trainingData.get(0); 
+       double minDistance = targetPoint.distance(nearestNeighbor); 
+
+       // Cerca il punto più vicino
+       for (Sample point : trainingData) {
+           double distance = targetPoint.distance(point);
+           if (distance < minDistance) {
+               minDistance = distance;
+               nearestNeighbor = point;
+           }
+       }
+
+       return nearestNeighbor.cls;
     }
 
-    /**
-     * Classifica un punto test in base alla maggioranza dei K vicini.
-     */
-    public int classify(Sample testPoint, int k) {
-        List<Sample> kNearestNeighbors = findKNearestNeighbors(testPoint, k);
-
-        // Azzera il conteggio delle classi
-        Arrays.fill(classCounts, 0);
-
-        // Conta quante volte compare ogni classe nei vicini
-        for (Sample neighbor : kNearestNeighbors) {
-            classCounts[neighbor.cls]++;
-        }
-
-        // Trova la classe più frequente (maggioranza)
-        int maxCount = -1;
-        int predictedClass = -1;
-        for (int i = 0; i < classCounts.length; i++) {
-            if (classCounts[i] > maxCount) {
-                maxCount = classCounts[i];
-                predictedClass = i;
-            }
-        }
-
-        return predictedClass;
-    }
-
-    /**
-     * Restituisce i dati di training (utile per analisi/debug).
-     */
     public List<Sample> getTrainingData() {
         return trainingData;
     }

@@ -1,6 +1,9 @@
 package it.unisa.diem.ai.torcs.utilities;
 
 import javax.swing.*;
+
+import it.unisa.diem.ai.torcs.controllers.SimpleDriver;
+
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -11,8 +14,11 @@ import java.awt.event.KeyEvent;
 public class ContinuousCharReaderUI extends JFrame {
 
     private JTextField inputField;
+    private final SimpleDriver driverManual;
 
-    public ContinuousCharReaderUI() {
+    public ContinuousCharReaderUI(SimpleDriver driver) {
+        this.driverManual =  driver;
+
         setTitle("TORCS Manual Controller");
         setSize(300, 100);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -28,39 +34,20 @@ public class ContinuousCharReaderUI extends JFrame {
         // Listener per i tasti premuti e rilasciati
         inputField.addKeyListener(new KeyAdapter() {
             @Override
-            public void keyPressed(KeyEvent e) {
-                switch (Character.toLowerCase(e.getKeyChar())) {
-                    case 'w': KeyInput.up = true; break;
-                    case 'a': KeyInput.left = true; break;
-                    case 's': KeyInput.down = true; break;
-                    case 'd': KeyInput.right = true; break;
-                    case KeyEvent.VK_SPACE: KeyInput.brake = true; break;
+            public void keyTyped(KeyEvent e) {
+                char pulsante = e.getKeyChar();
+                // Clear the text field
+                inputField.setText("");
+                driverManual.setKey(pulsante);
+                if(pulsante == 'l'){
+                    boolean lettura = driverManual.isTrain();
+                    driverManual.setTrain(!lettura);
                 }
-                System.out.println("Pressed: " + e.getKeyChar());
-                System.out.println("Key state → W: " + KeyInput.up + " | A: " + KeyInput.left + " | S: " + KeyInput.down + " | D: " + KeyInput.right);
+                
             }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                switch (Character.toLowerCase(e.getKeyChar())) {
-                    case 'w': KeyInput.up = false; break;
-                    case 'a': KeyInput.left = false; break;
-                    case 's': KeyInput.down = false; break;
-                    case 'd': KeyInput.right = false; break;
-                    case KeyEvent.VK_SPACE: KeyInput.brake = false; break;
-
-                }
-                System.out.println("Pressed: " + e.getKeyChar());
-                System.out.println("Key state → W: " + KeyInput.up + " | A: " + KeyInput.left + " | S: " + KeyInput.down + " | D: " + KeyInput.right);
-            }
-        });
-
+        });        
         // Mostra la GUI e imposta focus iniziale
         setVisible(true);
-        SwingUtilities.invokeLater(() -> inputField.requestFocusInWindow());
-    }
+  }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(ContinuousCharReaderUI::new);
-    }
 }

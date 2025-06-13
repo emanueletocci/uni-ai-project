@@ -10,20 +10,24 @@ public abstract class Controller {
 		WARMUP, QUALIFYING, RACE, UNKNOWN;
 
 		public static Stage fromInt(int value) {
-            return switch (value) {
-                case 0 -> WARMUP;
-                case 1 -> QUALIFYING;
-                case 2 -> RACE;
-                default -> UNKNOWN;
-            };
+			switch (value) {
+			case 0:
+				return WARMUP;
+			case 1:
+				return QUALIFYING;
+			case 2:
+				return RACE;
+			default:
+				return UNKNOWN;
+			}
 		}
-	}
+	};
 
-    private Stage stage;
+	private Stage stage;
 	private String trackName;
 
-	public float[] initAngles() {
-		float[] angles = new float[19];
+	public double[] initAngles() {
+		double[] angles = new double[19];
 		for (int i = 0; i < 19; ++i)
 			angles[i] = -90 + i * 10;
 		return angles;
