@@ -79,15 +79,13 @@ public class HumanDriver extends BaseDriver {
         FeatureVector rawFeatures = extractor.extractFeatures(sensors);
         FeatureVector featuresNormalizzate = normalizer.normalize(rawFeatures);
 
-        // Filtraggio dei campioni - inserisco solo azioni significative nel dataset
-        if (action.accelerate > 0 || action.brake > 0 || Math.abs(action.steering) > 0.1 || action.gear == -1) {
 
-            Sample rawSample = new Sample(rawFeatures, label);
-            rawDataset.addSample(rawSample);
+        Sample rawSample = new Sample(rawFeatures, label);
+        rawDataset.addSample(rawSample);
 
-            Sample sampleNormalizzato = new Sample(featuresNormalizzate, label);
-            datasetNormalizzato.addSample(sampleNormalizzato);
-        }
+        Sample sampleNormalizzato = new Sample(featuresNormalizzate, label);
+        datasetNormalizzato.addSample(sampleNormalizzato);
+
         return action;
     }
 

@@ -8,7 +8,6 @@ public class AutonomousDriver extends BaseDriver {
     private final FeatureExtractor extractor;
     private final FeatureNormalizer normalizer;
     private final NearestNeighbor knn;
-    private boolean correct = false;
 
     Action action = new Action();
 
@@ -58,7 +57,7 @@ public class AutonomousDriver extends BaseDriver {
             // 4. Predici la label tramite il classificatore KNN
             // o il valore ottimale scelto
 
-            int k = 3;
+            int k = 5;
             int predictedClass = knn.classify(testSample, k);
             Label predictedLabel = Label.fromCode(predictedClass);
             System.out.println("Predicted class: " + predictedLabel);
@@ -76,13 +75,13 @@ public class AutonomousDriver extends BaseDriver {
     private Action labelToAction(Label label, SensorModel sensors) {
         action.reset();
         switch (label) {
-            case AVANTI_SINISTRA:
+            case GIRA_SINISTRA:
                 giraSinistra(action, sensors);
                 break;
-            case AVANTI_DRITTO:
+            case ACCELERA:
                 accelera(action, sensors);
                 break;
-            case AVANTI_DESTRA:
+            case GIRA_DESTRA:
                 giraDestra(action, sensors);
                 break;
             case FRENA:
@@ -90,6 +89,10 @@ public class AutonomousDriver extends BaseDriver {
                 break;
             case RETROMARCIA:
                 retromarcia(action, sensors);
+                break;
+            default:
+                /// DECELERAZIONE
+                decelera(action, sensors);
                 break;
         }
         return action;

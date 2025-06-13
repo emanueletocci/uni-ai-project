@@ -51,6 +51,7 @@ public class NearestNeighbor {
         return predictedClass;
     }
 
+
     public Dataset getTrainingData() {
         return trainingData;
     }
