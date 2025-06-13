@@ -8,11 +8,12 @@ public class AutonomousDriver extends BaseDriver {
     private final FeatureExtractor extractor;
     private final FeatureNormalizer normalizer;
     private final NearestNeighbor knn;
+    private boolean correct = false;
 
+    Action action = new Action();
 
     public AutonomousDriver() {
-        // Carica dataset e normalizzatore
-        Dataset trainingSet = Dataset.loadFromCSV("data/dataset_normalizzato.csv");
+        Dataset trainingSet = Dataset.loadFromCSV("data/raw_dataset.csv");
         normalizer = new FeatureNormalizer();
         extractor = new FeatureExtractor();
         knn = new NearestNeighbor(trainingSet);
@@ -30,7 +31,6 @@ public class AutonomousDriver extends BaseDriver {
 
         // AUTO BLOCCATA
         if(stuck > stuckAngle) {
-            Action action = new Action();
             System.out.println("Auto bloccata per: " + stuck + " turni, correzione in corso...");
             float steer = (float) (-sensors.getAngleToTrackAxis() / steerLock);
             int gear = -1;
@@ -44,8 +44,8 @@ public class AutonomousDriver extends BaseDriver {
             action.brake = 0;
             action.clutch = clutching(sensors, clutchMax);
 
-            return action;
         } else {
+            // AUTO NON BLOCCATA - GUIDA TRAMITE CLASSIFICATORE KNN
             // 1. Estrai le feature dal sensore
             FeatureVector rawFeatures = extractor.extractFeatures(sensors);
 
@@ -53,37 +53,28 @@ public class AutonomousDriver extends BaseDriver {
             FeatureVector normalizedFeatures = normalizer.normalize(rawFeatures);
 
             // 3. Crea un Sample "dummy" da classificare (label non serve)
-            Sample testSample = new Sample(normalizedFeatures, null);
+            Sample testSample = new Sample(rawFeatures, null);
 
             // 4. Predici la label tramite il classificatore KNN
             // o il valore ottimale scelto
 
-            int k = 10;
+            int k = 3;
             int predictedClass = knn.classify(testSample, k);
             Label predictedLabel = Label.fromCode(predictedClass);
             System.out.println("Predicted class: " + predictedLabel);
 
             // 5. Mappa la label in un oggetto Action
-            Action action = labelToAction(predictedLabel, sensors);
-
-            if(sensors.getTrackPosition() > 1.0){
-                System.out.println("Fuori pista a sinistra");
-                giraDestra(action, sensors);
-            } else if(sensors.getTrackPosition() < -1.0){
-                System.out.println("Fuori pista a destra");
-                giraSinistra(action, sensors);
-            }
-
-            return action;
+            labelToAction(predictedLabel, sensors);
         }
+
+        return action;
     }
 
     /**
      * Mappa una label predetta in un oggetto Action da inviare a TORCS.
      */
     private Action labelToAction(Label label, SensorModel sensors) {
-        Action action = new Action();
-
+        action.reset();
         switch (label) {
             case AVANTI_SINISTRA:
                 giraSinistra(action, sensors);

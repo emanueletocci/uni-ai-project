@@ -1,11 +1,5 @@
-package it.unisa.diem.ai.torcs.utils;
-
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
+import it.unisa.diem.ai.torcs.model.SensorFeature;
+import java.util.List;
 
 public class RadarVisualizer extends JPanel {
     private double[] distances = new double[19];
@@ -14,7 +8,6 @@ public class RadarVisualizer extends JPanel {
         this.distances = newDistances;
         repaint();
     }
-
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -32,16 +25,23 @@ public class RadarVisualizer extends JPanel {
         double maxLength = 100.0;
         double scale = (height - 40) / maxLength;
 
-        for (int i = 0; i < distances.length; i++) {
+        // Ottieni solo gli indici dei sensori da visualizzare
+        List<Integer> indices = SensorFeature.getTrackSensorIndices();
+
+        for (int i : indices) {
             double angleDeg = -90 + i * 10;
             double angleRad = Math.toRadians(angleDeg);
             double length = Math.min(distances[i], maxLength) * scale;
 
-            int x2 = originX + (int) (length * Math.sin(angleRad)); // sin per X
-            int y2 = originY - (int) (length * Math.cos(angleRad)); // cos per Y
+            int x2 = originX + (int) (length * Math.sin(angleRad));
+            int y2 = originY - (int) (length * Math.cos(angleRad));
 
             g2d.setColor(Color.GREEN);
             g2d.drawLine(originX, originY, x2, y2);
+
+            // Opzionale: etichetta il sensore
+            g2d.setColor(Color.RED);
+            g2d.drawString(String.valueOf(i), x2, y2);
         }
     }
 

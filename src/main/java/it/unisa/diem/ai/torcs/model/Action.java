@@ -30,4 +30,15 @@ public class Action {
 		gear = Math.max(-1, Math.min(6, gear));
 
 	}
+
+	public void reset() {
+		accelerate = 0;
+		brake = 0;
+		clutch = 0;
+		gear = 0;
+		steering = 0;
+		restartRace = false;
+		focus = 360; // ML
+		limitValues();
+	}
 }

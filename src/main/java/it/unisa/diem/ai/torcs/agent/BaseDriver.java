@@ -6,7 +6,7 @@ public abstract class BaseDriver extends Controller{
     final int[] gearUp = { 5000, 6000, 6000, 6500, 7000, 0 };
     final int[] gearDown = { 0, 2500, 3000, 3000, 3500, 3500 };
 
-    final int stuckTime = 25;
+    final int stuckTime = 100;
     final float stuckAngle = (float) 0.523598775; // PI/6
 
     final float maxSpeedDist = 70;
@@ -148,20 +148,15 @@ public abstract class BaseDriver extends Controller{
     }
 
     void giraSinistra(Action action, SensorModel sensors) {
-        action.clutch = clutching(sensors, (float) action.clutch);
-        action.gear = getGear(sensors);
         action.steering = 0.3f;
     }
 
     void giraDestra(Action action, SensorModel sensors) {
-        action.clutch = clutching(sensors, (float) action.clutch);
-        action.gear = getGear(sensors);
         action.steering = -0.3f;
     }
 
     @Override
     public float[] initAngles() {
-
         float[] angles = new float[19];
 
         /*
