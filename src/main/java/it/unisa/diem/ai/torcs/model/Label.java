@@ -24,17 +24,17 @@ public enum Label {
             return RETROMARCIA;
 
         // Priorità 2: frenata
-        if (action.brake > 0.2f)
+        if (action.brake > 0.1f)
             return FRENA;
 
-        if (action.steering >= 0.2f)
+        if (action.steering >= 0.10f)
             return GIRA_SINISTRA;
 
-        if (action.steering <= -0.2f)
+        if (action.steering <= -0.10f)
             return GIRA_DESTRA;
 
         // Priorità 4: accelerazione forte
-        if (action.accelerate >= 0.7f)
+        if (action.accelerate >= 0.8f)
             return ACCELERA;
 
 

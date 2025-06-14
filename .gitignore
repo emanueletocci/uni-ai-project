@@ -37,7 +37,6 @@ build/
 ### Mac OS ###
 .DS_Store
 
-data/
 src/classes/it/unisa/diem/ai/torcs/agent/AutonomousDriver$1.class
 src/classes/it/unisa/diem/ai/torcs/agent/AutonomousDriver.class
 src/classes/it/unisa/diem/ai/torcs/agent/BaseDriver.class

@@ -148,7 +148,6 @@ public abstract class BaseDriver extends Controller{
     }
     void giraSinistra(Action action, SensorModel sensors) {
         action.steering = 0.3f;  // curva ben marcata
-        action.accelerate = 0.4f; // meno gas in curva
         action.brake = 0.0f;      // potresti metterlo a 0.1f in curva stretta
         action.gear = sensors.getGear();  // ❌ niente cambio automatico in curva
         action.clutch = 0.0f;     // non necessario
@@ -156,7 +155,6 @@ public abstract class BaseDriver extends Controller{
 
     void giraDestra(Action action, SensorModel sensors) {
         action.steering = -0.3f;
-        action.accelerate = 0.4f;
         action.brake = 0.0f;
         action.gear = sensors.getGear();
         action.clutch = 0.0f;
