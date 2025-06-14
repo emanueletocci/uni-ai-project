@@ -32,7 +32,7 @@ class KDTree {
             throw new IllegalArgumentException("Points list cannot be empty");
         }
         // Determina il numero di dimensioni da un campione
-        this.dimensions = points.getFirst().getFeature().size();
+        this.dimensions = points.get(0).getFeature().size();
         root = buildTree(points, 0);
     }
 

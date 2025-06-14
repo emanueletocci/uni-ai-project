@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Questo script serve a lanciare il client Java per il gioco TORCS.
+# Questo script serve a visualizzare la distribuzione delle features/samples nel dataset specificato nella classe
 
 # Vai nella root (se lo script è lanciato altrove)
 cd "$(dirname "$0")/.."
