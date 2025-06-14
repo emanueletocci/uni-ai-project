@@ -17,21 +17,21 @@ public class HumanDriver extends BaseDriver {
         SwingUtilities.invokeLater(ContinuousCharReaderUI::new);
         SwingUtilities.invokeLater(() -> RadarVisualizer.showRadar(radar));
     }
+
     private final Dataset rawDataset; // Dataset grezzo
-    private final Dataset datasetNormalizzato;    // Dataset normalizzato
+    private final Dataset datasetNormalizzato; // Dataset normalizzato
     private final Dataset recoveryDataset;
     private final Dataset driverDataset;
     private final FeatureExtractor extractor;
     private final FeatureNormalizer normalizer;
 
     public HumanDriver() {
-        rawDataset = new Dataset();             // Dataset completo in formato grezzo
-        datasetNormalizzato = new Dataset();    // Dataset completo in formato normalizzato
-        recoveryDataset = new Dataset();        // Dataset per le situazioni di recupero, normalizzato
-        driverDataset = new Dataset();          // Dataset per le situazioni di guida normale, normalizzato
+        rawDataset = new Dataset();
+        datasetNormalizzato = new Dataset();
+        recoveryDataset = new Dataset();
+        driverDataset = new Dataset();
         extractor = new FeatureExtractor();
         normalizer = new FeatureNormalizer();
-
     }
 
     @Override
@@ -42,7 +42,7 @@ public class HumanDriver extends BaseDriver {
         Action action = new Action();
         double speedX = sensors.getSpeed();
 
-        // Gestione accelerazione, frenata, retromarcia
+        // Accelerazione, freno, retromarcia
         if (KeyInput.brake) {
             frena(action, sensors);
         } else if (KeyInput.down && speedX < 5.0) {
@@ -50,40 +50,35 @@ public class HumanDriver extends BaseDriver {
         } else if (KeyInput.up) {
             accelera(action, sensors);
         } else {
-            // Nessun comando di accelerazione o frenata
             action.accelerate = 0.0;
             action.brake = 0.0;
         }
 
-        // Gestione sterzata (sovrascrive solo lo sterzo)
+        // Sterzo
         if (KeyInput.left && !KeyInput.right) {
             giraSinistra(action, sensors);
         } else if (KeyInput.right && !KeyInput.left) {
             giraDestra(action, sensors);
         } else {
-            // Nessuna sterzata o sterzo centrato
             action.steering = 0.0;
         }
 
-        // Cambio marcia automatico solo se non in retromarcia
+        // Cambio marcia automatico
         if (action.gear != -1) {
             action.gear = getGear(sensors);
         }
 
-        // Gestione clutch e ABS (opzionale, puoi riutilizzare i tuoi metodi)
+        // Gestione frizione e ABS
         action.clutch = clutching(sensors, (float) action.clutch);
         if (action.brake > 0) {
             action.brake = filterABS(sensors, (float) action.brake);
         }
 
-        // Discretizza l'azione in una label
+        // --- Dataset ---
         Label label = Label.fromAction(action);
-
-        // Estrai le feature dai sensori
         FeatureVector rawFeatures = extractor.extractFeatures(sensors);
         FeatureVector featuresNormalizzate = normalizer.normalize(rawFeatures);
 
-        // Criterio di filtraggio: solo guida in pista
         double trackPos = sensors.getTrackPosition();
         double angle = sensors.getAngleToTrackAxis();
         double speedY = sensors.getLateralSpeed();
@@ -92,17 +87,21 @@ public class HumanDriver extends BaseDriver {
         Sample rawSample = new Sample(rawFeatures, label);
         Sample sampleNormalizzato = new Sample(featuresNormalizzate, label);
 
-        rawDataset.addSample(rawSample);
-        datasetNormalizzato.addSample(sampleNormalizzato);
+        // ✅ Registra solo se la checkbox è selezionata
+        ContinuousCharReaderUI ui = ContinuousCharReaderUI.getInstance();
+        if (ui != null && ui.isDatasetRecordingEnabled()) {
+            rawDataset.addSample(rawSample);
+            datasetNormalizzato.addSample(sampleNormalizzato);
 
-        if (isDriving) {
-            driverDataset.addSample(sampleNormalizzato);
-        } else {
-            recoveryDataset.addSample(sampleNormalizzato);
+            if (isDriving) {
+                driverDataset.addSample(sampleNormalizzato);
+            } else {
+                recoveryDataset.addSample(sampleNormalizzato);
+            }
         }
+
         return action;
     }
-
 
     @Override
     public void shutdown() {
@@ -112,9 +111,8 @@ public class HumanDriver extends BaseDriver {
         recoveryDataset.saveToCSV("data/recovery_dataset.csv");
     }
 
-
     @Override
     public void reset() {
-        // Eventuale logica di reset
+        // Eventuale logica di reset se necessaria
     }
 }

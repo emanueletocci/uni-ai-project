@@ -14,20 +14,32 @@ import java.awt.event.KeyEvent;
  */
 public class ContinuousCharReaderUI extends JFrame {
 
+    private static ContinuousCharReaderUI instance; // Singleton instance
+
     /** Campo di testo invisibile che intercetta gli eventi da tastiera */
     private JTextField inputField;
 
+    /** Checkbox per abilitare/disabilitare la registrazione del dataset */
+    private JCheckBox recordDatasetCheckbox;
+
     /**
-     * Costruttore della GUI. Imposta layout, dimensioni, focus e listener tastiera.
+     * Costruttore della GUI. Imposta layout, dimensioni, focus, listener tastiera e checkbox.
      */
     public ContinuousCharReaderUI() {
+        instance = this; // Imposta l'istanza singleton
+
         setTitle("TORCS Manual Controller");
-        setSize(300, 100);
+        setSize(300, 120);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new FlowLayout());
 
+        // Campo testo invisibile per intercettare input tastiera
         inputField = new JTextField(20);
         add(inputField);
+
+        // Checkbox per registrazione dataset
+        recordDatasetCheckbox = new JCheckBox("Registra dataset");
+        add(recordDatasetCheckbox);
 
         // Garantisce che il campo di input riceva il focus
         inputField.setFocusable(true);
@@ -37,38 +49,51 @@ public class ContinuousCharReaderUI extends JFrame {
         inputField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                // Converte il tasto in minuscolo e aggiorna i flag
                 switch (Character.toLowerCase(e.getKeyChar())) {
                     case 'w': KeyInput.up = true; break;
                     case 'a': KeyInput.left = true; break;
                     case 's': KeyInput.down = true; break;
                     case 'd': KeyInput.right = true; break;
-                    case KeyEvent.VK_SPACE: KeyInput.brake = true; break;
+                }
+                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                    KeyInput.brake = true;
                 }
             }
 
             @Override
             public void keyReleased(KeyEvent e) {
-                // Rilascia i flag quando il tasto non è più premuto
                 switch (Character.toLowerCase(e.getKeyChar())) {
                     case 'w': KeyInput.up = false; break;
                     case 'a': KeyInput.left = false; break;
                     case 's': KeyInput.down = false; break;
                     case 'd': KeyInput.right = false; break;
-                    case KeyEvent.VK_SPACE: KeyInput.brake = false; break;
+                }
+                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                    KeyInput.brake = false;
                 }
             }
         });
 
-        // Mostra la finestra e assicura che il focus sia sul campo
         setVisible(true);
         SwingUtilities.invokeLater(() -> inputField.requestFocusInWindow());
     }
 
     /**
+     * Metodo statico per ottenere l'istanza singleton di questa GUI.
+     */
+    public static ContinuousCharReaderUI getInstance() {
+        return instance;
+    }
+
+    /**
+     * Metodo che ritorna true se la checkbox "Registra dataset" è selezionata.
+     */
+    public boolean isDatasetRecordingEnabled() {
+        return recordDatasetCheckbox != null && recordDatasetCheckbox.isSelected();
+    }
+
+    /**
      * Metodo main per avviare la GUI in modo indipendente.
-     *
-     * @param args argomenti da riga di comando (non utilizzati)
      */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(ContinuousCharReaderUI::new);
