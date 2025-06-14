@@ -6,5 +6,5 @@
 cd "$(dirname "$0")/.."
 
 # Esegui il programma Java
-java -cp src/classes it.unisa.diem.ai.torcs.io.Client it.unisa.diem.ai.torcs.agent.AutonomousDriver host:localhost port:3001
+java -cp src/classes it.unisa.diem.ai.torcs.utils.BilanciamentoDataset
 
