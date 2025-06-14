@@ -46,9 +46,9 @@ public enum Label {
     @Override
     public String toString() {
         return switch (this) {
-            case GIRA_SINISTRA -> "Avanti Sinistra";
-            case ACCELERA -> "Avanti Dritto";
-            case GIRA_DESTRA -> "Avanti Destra";
+            case GIRA_SINISTRA -> "Gira Sinistra";
+            case ACCELERA -> "Accelera";
+            case GIRA_DESTRA -> "Gira Destra";
             case FRENA -> "Frena";
             case RETROMARCIA -> "Retromarcia";
             case DECELERAZIONE -> "Decelerazione";
