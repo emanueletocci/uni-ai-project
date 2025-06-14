@@ -7,19 +7,27 @@ import it.unisa.diem.ai.torcs.classifier.NearestNeighbor;
 public class AutonomousDriver extends BaseDriver {
     private final FeatureExtractor extractor;
     private final FeatureNormalizer normalizer;
-    private final NearestNeighbor knn;
-    private final Dataset rawDataset;
-    private final Dataset datasetNormalizzato;
+
+    private final NearestNeighbor driverKNN;
+    private final NearestNeighbor recoveryKNN;
+
+    private final Dataset recoveryDataset;
+    private final Dataset driverDataset;
 
 
     Action action = new Action();
 
     public AutonomousDriver() {
-        rawDataset = Dataset.loadFromCSV("data/raw_dataset.csv");
-        datasetNormalizzato = Dataset.loadFromCSV("data/dataset_normalizzato.csv");
         normalizer = new FeatureNormalizer();
         extractor = new FeatureExtractor();
-        knn = new NearestNeighbor(datasetNormalizzato);
+
+        driverDataset = Dataset.loadFromCSV("data/driver_dataset.csv");
+        recoveryDataset = Dataset.loadFromCSV("data/recovery_dataset.csv");
+        driverDataset.shuffle();
+        recoveryDataset.shuffle();
+
+        driverKNN = new NearestNeighbor(driverDataset);
+        recoveryKNN = new NearestNeighbor(recoveryDataset);
     }
 
     @Override
@@ -61,8 +69,8 @@ public class AutonomousDriver extends BaseDriver {
             // 4. Predici la label tramite il classificatore KNN
             // o il valore ottimale scelto
 
-            int k = 3;
-            int predictedClass = knn.classify(testSample, k);
+            int k = 5;
+            int predictedClass = driverKNN.classify(testSample, k);
             Label predictedLabel = Label.fromCode(predictedClass);
             System.out.println("Predicted class: " + predictedLabel);
 

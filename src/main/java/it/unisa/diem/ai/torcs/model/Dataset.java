@@ -67,7 +67,7 @@ public class Dataset {
 
     // Salva il dataset su file CSV
     public void saveToCSV(String filePath) {
-        try(BufferedWriter bw = new BufferedWriter(new FileWriter(filePath))){
+        try(BufferedWriter bw = new BufferedWriter(new FileWriter(filePath, true))){
             bw.write(FIRST_FILE_LINE);
             bw.newLine();
             for (Sample sample : samples) {

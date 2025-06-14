@@ -13,12 +13,11 @@ public class FeatureNormalizer {
     public static final double MAX_TRACK_EDGE = 200.0;
 
     /** Velocità longitudinale minima e massima dell’auto (speedX, in km/h). */
-    public static final double MIN_SPEED_X = 0.0;
+    public static final double MIN_SPEED_X = -100.0;
     public static final double MAX_SPEED_X = 300.0;
 
-    /** Velocità massima in retromarcia (in modulo, km/h). */
-    public static final double MIN_NEGATIVE_SPEED = -60.0;
-    public static final double MAX_NEGATIVE_SPEED = -0.001;
+    public static final double MIN_SPEED_Y = -50.0;
+    public static final double MAX_SPEED_Y =  50.0;
 
     /** Posizione laterale massima sulla pista (track position ∈ [-1, 1]). */
     public static final double MIN_TRACK_POSITION = -1.0;
@@ -43,15 +42,10 @@ public class FeatureNormalizer {
             // Scegli il range in base alla feature
             switch (features[i]) {
                 case SPEED_X:
-                    if(val >=0 ){
-                        min = MIN_SPEED_X;
-                        max = MAX_SPEED_X;
-                    } else {
-                        // Velocità negativa, usa il range per la retromarcia
-                        min = MIN_NEGATIVE_SPEED; // -60.0
-                        max = MAX_NEGATIVE_SPEED; // -0.001
-                    }
+                    min = MIN_SPEED_X; max = MAX_SPEED_X;
                     break;
+                case SPEED_Y:
+                    min = MIN_SPEED_Y; max = MAX_SPEED_Y; break;
                 case ANGLE_TO_TRACK_AXIS:
                     min = MIN_ANGLE_TO_TRACK_AXIS; max = MAX_ANGLE_TO_TRACK_AXIS; break;
                 case TRACK_POSITION:

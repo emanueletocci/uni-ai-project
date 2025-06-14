@@ -6,5 +6,5 @@
 cd "$(dirname "$0")/.."
 
 # Esegui il programma Java
-java -cp src/classes it.unisa.diem.ai.torcs.utils.BilanciamentoDataset
+java -cp src/classes it.unisa.diem.ai.torcs.utils.DatasetBalancer
 

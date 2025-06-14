@@ -147,6 +147,8 @@ public abstract class BaseDriver extends Controller{
         action.clutch = clutchMax;
     }
     void giraSinistra(Action action, SensorModel sensors) {
+        if(sensors.getSpeed() < 15)
+            action.accelerate = 0.5;
         action.steering = 0.3f;  // curva ben marcata
         action.brake = 0.0f;      // potresti metterlo a 0.1f in curva stretta
         action.gear = sensors.getGear();  // ❌ niente cambio automatico in curva
@@ -154,6 +156,8 @@ public abstract class BaseDriver extends Controller{
     }
 
     void giraDestra(Action action, SensorModel sensors) {
+        if(sensors.getSpeed() < 15)
+            action.accelerate = 0.5;
         action.steering = -0.3f;
         action.brake = 0.0f;
         action.gear = sensors.getGear();

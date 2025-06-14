@@ -34,7 +34,7 @@ public enum Label {
             return GIRA_DESTRA;
 
         // Priorità 4: accelerazione forte
-        if (action.accelerate >= 0.8f)
+        if (action.accelerate >= 0.9f)
             return ACCELERA;
 
 

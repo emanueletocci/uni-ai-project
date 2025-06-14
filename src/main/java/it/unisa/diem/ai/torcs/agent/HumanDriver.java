@@ -19,12 +19,16 @@ public class HumanDriver extends BaseDriver {
     }
     private final Dataset rawDataset; // Dataset grezzo
     private final Dataset datasetNormalizzato;    // Dataset normalizzato
+    private final Dataset recoveryDataset;
+    private final Dataset driverDataset;
     private final FeatureExtractor extractor;
     private final FeatureNormalizer normalizer;
 
     public HumanDriver() {
-        rawDataset = new Dataset();
-        datasetNormalizzato = new Dataset();
+        rawDataset = new Dataset();             // Dataset completo in formato grezzo
+        datasetNormalizzato = new Dataset();    // Dataset completo in formato normalizzato
+        recoveryDataset = new Dataset();        // Dataset per le situazioni di recupero, normalizzato
+        driverDataset = new Dataset();          // Dataset per le situazioni di guida normale, normalizzato
         extractor = new FeatureExtractor();
         normalizer = new FeatureNormalizer();
 
@@ -79,13 +83,23 @@ public class HumanDriver extends BaseDriver {
         FeatureVector rawFeatures = extractor.extractFeatures(sensors);
         FeatureVector featuresNormalizzate = normalizer.normalize(rawFeatures);
 
+        // Criterio di filtraggio: solo guida in pista
+        double trackPos = sensors.getTrackPosition();
+        double angle = sensors.getAngleToTrackAxis();
+        double speedY = sensors.getLateralSpeed();
+        boolean isDriving = Math.abs(trackPos) <= 0.9 && Math.abs(angle) <= 0.5 && Math.abs(speedY) <= 15;
 
         Sample rawSample = new Sample(rawFeatures, label);
-        rawDataset.addSample(rawSample);
-
         Sample sampleNormalizzato = new Sample(featuresNormalizzate, label);
+
+        rawDataset.addSample(rawSample);
         datasetNormalizzato.addSample(sampleNormalizzato);
 
+        if (isDriving) {
+            driverDataset.addSample(sampleNormalizzato);
+        } else {
+            recoveryDataset.addSample(sampleNormalizzato);
+        }
         return action;
     }
 
@@ -94,7 +108,10 @@ public class HumanDriver extends BaseDriver {
     public void shutdown() {
         rawDataset.saveToCSV("data/raw_dataset.csv");
         datasetNormalizzato.saveToCSV("data/dataset_normalizzato.csv");
+        driverDataset.saveToCSV("data/driver_dataset.csv");
+        recoveryDataset.saveToCSV("data/recovery_dataset.csv");
     }
+
 
     @Override
     public void reset() {

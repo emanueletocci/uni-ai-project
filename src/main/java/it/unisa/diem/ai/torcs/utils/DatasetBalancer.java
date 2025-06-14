@@ -8,42 +8,48 @@ import java.util.*;
 public class DatasetBalancer {
 
     public static void main(String[] args) {
-        String inputPath = "data/raw_dataset.csv"; // dataset sbilanciato
-        String outputPath = "data/raw_dataset_balanced.csv"; // output bilanciato
+        String inputPath = "data/raw_dataset.csv";
+        String outputPath = "data/filtered_dataset.csv";
 
-        Dataset rawDataset = Dataset.loadFromCSV(inputPath);
-        List<Sample> allSamples = rawDataset.getSamples();
+        Dataset dataset = Dataset.loadFromCSV(inputPath);
+        List<Sample> filtered = new ArrayList<>();
 
-        // Raggruppa i sample per label
+        for (Sample s : dataset.getSamples()) {
+            double trackPos = s.getFeature().getValues().get(SensorFeature.TRACK_POSITION.ordinal());
+            double angle = s.getFeature().getValues().get(SensorFeature.ANGLE_TO_TRACK_AXIS.ordinal());
+
+            // Filtra fuori pista (oltre 90% margine) o angoli assurdi
+            if (Math.abs(trackPos) > 0.9 || Math.abs(angle) > 0.4) continue;
+            filtered.add(s);
+        }
+
+        // Raggruppa per label
         Map<Label, List<Sample>> grouped = new HashMap<>();
-        for (Sample s : allSamples) {
+        for (Sample s : filtered) {
             grouped.computeIfAbsent(s.getLabel(), _ -> new ArrayList<>()).add(s);
         }
 
-        // Determina la classe minoritaria (max tra i minori)
-        int targetSize = grouped.values().stream().mapToInt(List::size).max().orElse(0);
-        System.out.println("Target size per class: " + targetSize);
+        // Clippiamo solo le accelerazioni (limite max per questa label)
+        int accelLimit = 2000;
+        List<Sample> finalSet = new ArrayList<>();
 
-        List<Sample> balanced = new ArrayList<>();
         for (Map.Entry<Label, List<Sample>> entry : grouped.entrySet()) {
-            List<Sample> group = new ArrayList<>(entry.getValue());
-            int originalSize = group.size();
+            List<Sample> samples = entry.getValue();
+            Collections.shuffle(samples);
 
-            // Sovracampionamento
-            while (group.size() < targetSize) {
-                int toCopy = Math.min(originalSize, targetSize - group.size());
-                group.addAll(group.subList(0, toCopy));
+            if (entry.getKey() == Label.ACCELERA && samples.size() > accelLimit) {
+                samples = samples.subList(0, accelLimit);
             }
-            balanced.addAll(group);
-            System.out.printf("%-15s -> %d samples\n", entry.getKey(), group.size());
+
+            finalSet.addAll(samples);
+            System.out.printf("%-15s => %d samples\n", entry.getKey(), samples.size());
         }
 
-        // Shuffle e salva
-        Collections.shuffle(balanced);
+        Collections.shuffle(finalSet);
         Dataset out = new Dataset();
-        balanced.forEach(out::addSample);
+        finalSet.forEach(out::addSample);
         out.saveToCSV(outputPath);
 
-        System.out.println("✅ Dataset bilanciato salvato in: " + new File(outputPath).getAbsolutePath());
+        System.out.println("✅ Dataset filtrato con clipping su ACCELERA salvato in: " + new File(outputPath).getAbsolutePath());
     }
 }

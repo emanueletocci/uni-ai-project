@@ -5,6 +5,7 @@ import java.util.List;
 
 public enum SensorFeature {
     SPEED_X("Speed X"),
+    SPEED_Y("Speed Y"),
     ANGLE_TO_TRACK_AXIS("Angle to Track Axis"),
     TRACK_POSITION("Track Position"),
     TRACK_EDGE_SENSOR_4("Track Edge Sensor 4", 4),
