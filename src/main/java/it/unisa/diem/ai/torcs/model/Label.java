@@ -62,17 +62,18 @@ public enum Label {
     /**
      * Discretizza un'azione continua in una label simbolica, secondo priorità:
      * <ol>
-     *     <li>Retromarcia (gear = -1 e accelerazione > 0)</li>
-     *     <li>Frenata (brake > 0.1)</li>
-     *     <li>Sterzata sinistra (steering >= 0.10)</li>
-     *     <li>Sterzata destra (steering <= -0.10)</li>
-     *     <li>Accelerazione (accelerate >= 0.9)</li>
+     *     <li>Retromarcia (gear = -1 e accelerazione &gt; 0)</li>
+     *     <li>Frenata (brake &gt; 0.1)</li>
+     *     <li>Sterzata sinistra (steering &gt;= 0.10)</li>
+     *     <li>Sterzata destra (steering &lt;= -0.10)</li>
+     *     <li>Accelerazione (accelerate &gt;= 0.9)</li>
      *     <li>Altrimenti: Decelerazione</li>
      * </ol>
      *
      * @param action l'oggetto {@link Action} da discretizzare
      * @return la {@link Label} corrispondente
      */
+
     public static Label fromAction(Action action) {
         if (action.gear == -1 && action.accelerate > 0)
             return RETROMARCIA;
