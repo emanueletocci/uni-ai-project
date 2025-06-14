@@ -8,9 +8,8 @@ import java.util.*;
 public class DatasetBalancer {
 
     public static void main(String[] args) {
-        String dbName = "dataset_normalizzato"; // Nome del dataset da bilanciare
-        String inputPath = "data/" + dbName + ".csv";
-        String outputPath = "data/" + dbName + "_clipped.csv";
+        String inputPath = "data/raw_dataset.csv";
+        String outputPath = "data/filtered_dataset.csv";
 
         Dataset dataset = Dataset.loadFromCSV(inputPath);
         List<Sample> filtered = new ArrayList<>();
@@ -30,16 +29,20 @@ public class DatasetBalancer {
             grouped.computeIfAbsent(s.getLabel(), _ -> new ArrayList<>()).add(s);
         }
 
-        // Clippiamo tutte le classi con limite massimo
-        int maxPerClass = 10000;
+        // Clippiamo solo le accelerazioni (limite max per questa label)
+        int accelLimit = 2000;
         List<Sample> finalSet = new ArrayList<>();
 
         for (Map.Entry<Label, List<Sample>> entry : grouped.entrySet()) {
             List<Sample> samples = entry.getValue();
             Collections.shuffle(samples);
-            int clipSize = Math.min(samples.size(), maxPerClass);
-            finalSet.addAll(samples.subList(0, clipSize));
-            System.out.printf("%-15s => %d samples\n", entry.getKey(), clipSize);
+
+            if (entry.getKey() == Label.ACCELERA && samples.size() > accelLimit) {
+                samples = samples.subList(0, accelLimit);
+            }
+
+            finalSet.addAll(samples);
+            System.out.printf("%-15s => %d samples\n", entry.getKey(), samples.size());
         }
 
         Collections.shuffle(finalSet);
@@ -47,6 +50,6 @@ public class DatasetBalancer {
         finalSet.forEach(out::addSample);
         out.saveToCSV(outputPath);
 
-        System.out.println("✅ Dataset filtrato con clipping max " + maxPerClass + " samples per classe salvato in: " + new File(outputPath).getAbsolutePath());
+        System.out.println("✅ Dataset filtrato con clipping su ACCELERA salvato in: " + new File(outputPath).getAbsolutePath());
     }
 }

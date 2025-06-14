@@ -21,7 +21,7 @@ public class AutonomousDriver extends BaseDriver {
         normalizer = new FeatureNormalizer();
         extractor = new FeatureExtractor();
 
-        driverDataset = Dataset.loadFromCSV("data/driver_dataset_balanced.csv");
+        driverDataset = Dataset.loadFromCSV("data/driver_dataset.csv");
         recoveryDataset = Dataset.loadFromCSV("data/recovery_dataset.csv");
         driverDataset.shuffle();
         recoveryDataset.shuffle();

@@ -90,8 +90,8 @@ public class MultiHistogramFromSamples {
     }
 
     public static void main(String[] args) {
-        String rawPath = "data/driver_dataset.csv";
-        String normPath = "data/driver_dataset_balanced.csv";
+        String rawPath = "data/raw_dataset.csv";
+        String normPath = "data/dataset_normalizzato.csv";
 
         List<Sample> rawSamples = loadSamples(rawPath);
         List<Sample> normSamples = loadSamples(normPath);
