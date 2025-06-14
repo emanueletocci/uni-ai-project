@@ -3,7 +3,7 @@ package it.unisa.diem.ai.torcs.utilities;
 import javax.swing.*;
 
 import it.unisa.diem.ai.torcs.controllers.SimpleDriverManual;
-
+import it.unisa.diem.ai.torcs.actions.Action;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -16,7 +16,8 @@ import java.util.Set;
 public class ContinuousCharReaderUI extends JFrame {
 
     private final SimpleDriverManual driver; //Oggetto identificante la vettura
-    private final it.unisa.diem.ai.torcs.actions.Action action;
+    private final Action action; // Azione associata al driver
+
     private KeyInput notifica;
     private final Set<Integer> pressedKeys = new HashSet<>();
 
@@ -26,8 +27,6 @@ public class ContinuousCharReaderUI extends JFrame {
         this.driver = driver;
         this.action = driver.action;
         this.notifica = new KeyInput();
-
-
 
 
         setTitle("TORCS Manual Controller");
@@ -54,7 +53,7 @@ public class ContinuousCharReaderUI extends JFrame {
                         notifica.up = true;
                         action.accelerate = 1.0;  
                         break;
-                    case KeyEvent.VK_S:
+                    case KeyEvent.VK_SPACE:
                         notifica.brake = true;
                         action.brake = 1.0;
                         break;
@@ -66,7 +65,7 @@ public class ContinuousCharReaderUI extends JFrame {
                         notifica.right = true;
                         action.steering = -0.5;
                         break;
-                    case KeyEvent.VK_R: //shift for reverse
+                    case KeyEvent.VK_S: //shift for reverse
                         notifica.down = true;
                         action.gear = -1;
                         break;
