@@ -69,7 +69,7 @@ public class AutonomousDriver extends BaseDriver {
             // 4. Predici la label tramite il classificatore KNN
             // o il valore ottimale scelto
 
-            int k = 3;
+            int k = 1;
             int predictedClass = driverKNN.classify(testSample, k);
             Label predictedLabel = Label.fromCode(predictedClass);
             System.out.println("Predicted class: " + predictedLabel);
