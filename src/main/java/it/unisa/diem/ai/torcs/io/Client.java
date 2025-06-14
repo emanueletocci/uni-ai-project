@@ -1,5 +1,19 @@
 /**
- * 
+ * Client di connessione per il simulatore TORCS.
+ * Si occupa di gestire la comunicazione tra l'agente e il simulatore,
+ * l'inizializzazione dei parametri, l'invio dei comandi e la ricezione dei sensori.
+ *
+ * Opzioni configurabili tramite args:
+ * - port:N -> porta di comunicazione (default 3001)
+ * - host:IP -> indirizzo host (default localhost)
+ * - id:nome -> identificativo del client (default SCR)
+ * - verbose:on -> attiva log dettagliati
+ * - maxEpisodes:N -> numero massimo di episodi (default 1)
+ * - maxSteps:N -> numero massimo di step per episodio (default 0 = illimitati)
+ * - stage:N -> stadio (0 = WARMUP, 1 = QUALIFYING, 2 = RACE, altri = UNKNOWN)
+ * - trackName:nome -> nome della pista
+ *
+ * @author Daniele Loiacono
  */
 package it.unisa.diem.ai.torcs.io;
 
@@ -10,11 +24,6 @@ import it.unisa.diem.ai.torcs.agent.Controller.Stage;
 import it.unisa.diem.ai.torcs.model.Action;
 import it.unisa.diem.ai.torcs.model.MessageBasedSensorModel;
 
-
-/**
- * @author Daniele Loiacono
- * 
- */
 public class Client {
 
 	private static int UDP_TIMEOUT = 10000;
@@ -28,27 +37,21 @@ public class Client {
 	private static String trackName;
 
 	/**
-	 * @param args viene utilizzato per definire tutte le opzioni del client.
-	 *             - port:N viene utilizzato per specificare la porta per la connessione (il valore predefinito è 3001).
-	 *             - host:INDIRIZZO viene utilizzato per specificare l'indirizzo dell'host dove il server è in esecuzione (il valore predefinito è localhost).
-	 *             - id:ClientID viene utilizzato per specificare l'ID del client inviato al server (il valore predefinito è championship2009).
-	 *             - verbose:on viene utilizzato per attivare la modalità verbose (il valore predefinito è spento).
-	 *             - maxEpisodes:N viene utilizzato per impostare il numero di episodi (il valore predefinito è 1).
-	 *             - maxSteps:N viene utilizzato per impostare il numero massimo di passaggi per ogni episodio (il valore predefinito è 0, che significa numero illimitato di passaggi).
-	 *             - stage:N viene utilizzato per impostare lo stadio corrente: 0 è WARMUP, 1 è QUALIFYING, 2 è RACE, altri valori significano UNKNOWN (il valore predefinito è UNKNOWN).
-	 *             - trackName:nome viene utilizzato per impostare il nome della pista attuale.
+	 * Metodo principale che avvia la simulazione.
+	 *
+	 * @param args argomenti da riga di comando per configurare la simulazione
 	 */
-
 	public static void main(String[] args) {
-		parseParameters(args);
+		parseParameters(args); // Analizza i parametri della riga di comando
+
 		SocketHandler mySocket = new SocketHandler(host, port, verbose);
 		String inMsg;
 
-		Controller driver = load(args[0]);
+		Controller driver = load(args[0]); // Carica dinamicamente il controller
 		driver.setStage(stage);
 		driver.setTrackName(trackName);
 
-		/* Build init string */
+		// Costruisce la stringa di inizializzazione (angoli radar)
 		float[] angles = driver.initAngles();
 		String initStr = clientId + "(init";
 		for (int i = 0; i < angles.length; i++) {
@@ -58,41 +61,29 @@ public class Client {
 
 		long curEpisode = 0;
 		boolean shutdownOccurred = false;
+
 		do {
-
-			/*
-			 * Client identification
-			 */
-
+			// Fase di identificazione con il server TORCS
 			do {
 				mySocket.send(initStr);
 				inMsg = mySocket.receive(UDP_TIMEOUT);
 			} while (inMsg == null || inMsg.indexOf("***identified***") < 0);
 
-			/*
-			 * Start to drive
-			 */
+			// Inizio dell'episodio di guida
 			long currStep = 0;
 			while (true) {
-				/*
-				 * Receives from TORCS the game state
-				 */
 				inMsg = mySocket.receive(UDP_TIMEOUT);
 
 				if (inMsg != null) {
 
-					/*
-					 * Check if race is ended (shutdown)
-					 */
+					// Verifica se la simulazione è terminata
 					if (inMsg.indexOf("***shutdown***") >= 0) {
 						shutdownOccurred = true;
 						System.out.println("Server shutdown!");
 						break;
 					}
 
-					/*
-					 * Check if race is restarted
-					 */
+					// Verifica se la simulazione è stata riavviata
 					if (inMsg.indexOf("***restart***") >= 0) {
 						driver.reset();
 						if (verbose)
@@ -101,6 +92,8 @@ public class Client {
 					}
 
 					Action action = new Action();
+
+					// Controllo dell'agente solo se non si è superato maxSteps
 					if (currStep < maxSteps || maxSteps == 0)
 						action = driver.control(new MessageBasedSensorModel(inMsg));
 					else
@@ -108,26 +101,27 @@ public class Client {
 
 					currStep++;
 					mySocket.send(action.toString());
-				} else
+
+				} else {
 					System.out.println("Server did not respond within the timeout");
+				}
 			}
 
 		} while (++curEpisode < maxEpisodes && !shutdownOccurred);
 
-		/*
-		 * Shutdown the controller
-		 */
+		// Chiusura del client e del controller
 		driver.shutdown();
 		mySocket.close();
 		System.out.println("Client shutdown.");
 		System.out.println("Bye, bye!");
-
 	}
 
+	/**
+	 * Analizza i parametri passati da riga di comando e imposta le opzioni globali.
+	 *
+	 * @param args array di stringhe con i parametri in formato chiave:valore
+	 */
 	private static void parseParameters(String[] args) {
-		/*
-		 * Set default values for the options
-		 */
 		port = 3001;
 		host = "localhost";
 		clientId = "SCR";
@@ -141,6 +135,7 @@ public class Client {
 			StringTokenizer st = new StringTokenizer(args[i], ":");
 			String entity = st.nextToken();
 			String value = st.nextToken();
+
 			if (entity.equals("port")) {
 				port = Integer.parseInt(value);
 			}
@@ -153,15 +148,12 @@ public class Client {
 			if (entity.equals("verbose")) {
 				if (value.equals("on"))
 					verbose = true;
-				else if (value.equals(false))
+				else if (value.equals("off"))
 					verbose = false;
 				else {
 					System.out.println(entity + ":" + value + " is not a valid option");
 					System.exit(0);
 				}
-			}
-			if (entity.equals("id")) {
-				clientId = value;
 			}
 			if (entity.equals("stage")) {
 				stage = Stage.fromInt(Integer.parseInt(value));
@@ -186,6 +178,12 @@ public class Client {
 		}
 	}
 
+	/**
+	 * Carica dinamicamente una classe Controller a partire dal nome fornito.
+	 *
+	 * @param name nome della classe da caricare
+	 * @return un'istanza del controller
+	 */
 	private static Controller load(String name) {
 		Controller controller = null;
 		try {
@@ -194,10 +192,8 @@ public class Client {
 			System.out.println(name + " is not a class name");
 			System.exit(0);
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return controller;

@@ -4,52 +4,73 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Rappresenta un campione etichettato composto da un vettore di feature e da una {@link Label}.
+ * Ogni {@code Sample} può essere caricato da una riga CSV o costruito direttamente da oggetti.
+ */
 public class Sample {
+
+    /** Vettore delle caratteristiche (features) del campione */
     private final FeatureVector feature;
+
+    /** Etichetta associata al campione (classe) */
     private final Label label;
 
+    /**
+     * Costruttore base: crea un nuovo Sample con feature e label specificate.
+     * @param feature vettore delle feature
+     * @param label etichetta associata
+     */
     public Sample(FeatureVector feature, Label label) {
         this.feature = feature;
         this.label = label;
     }
 
     /**
-     * Crea un Sample da una riga CSV.
-     * Formato atteso: f1,f2,...,fn,label
+     * Costruttore che crea un Sample a partire da una riga CSV.
+     * <p>Formato atteso: {@code f1;f2;...;fn;labelCode;labelName}</p>
+     * La label testuale alla fine viene ignorata.
+     * @param csvLine riga del file CSV
+     * @throws NumberFormatException se il parsing dei valori fallisce
      */
     public Sample(String csvLine) {
         String[] tokens = csvLine.split(";");
         List<Double> features = new ArrayList<>();
-        for (int i = 0; i < tokens.length - 2; i++) { // fino a LABEL_CODE escluso
+        for (int i = 0; i < tokens.length - 2; i++) {
             String sanitized = tokens[i].trim().replace(',', '.');
             features.add(Double.parseDouble(sanitized));
         }
         this.feature = new FeatureVector(features);
-        // Prendi la label numerica dalla penultima colonna
         this.label = Label.fromCode(Integer.parseInt(tokens[tokens.length - 2].trim()));
-        // Ignora completamente tokens[tokens.length - 1] (label testuale)
     }
 
+    /**
+     * @return vettore delle feature del campione
+     */
     public FeatureVector getFeature() {
         return feature;
     }
 
+    /**
+     * @return etichetta del campione
+     */
     public Label getLabel() {
         return label;
     }
 
     /**
-     * Calcola la distanza euclidea tra questo Sample e un altro Sample.
+     * Calcola la distanza euclidea tra questo Sample e un altro.
+     * @param altro l'altro campione da confrontare
+     * @return distanza euclidea tra i due campioni
      */
     public double distanzaEuclidea(Sample altro) {
         return this.feature.distanzaEuclidea(altro.getFeature());
     }
 
-
-
     /**
-     * Restituisce la rappresentazione CSV di questo Sample.
-     * Formato: f1,f2,...,fn,label
+     * Converte questo Sample in una riga CSV.
+     * <p>Formato: {@code f1;f2;...;fn;labelCode;labelName}</p>
+     * @return stringa CSV del campione
      */
     public String toCSV() {
         StringBuilder sb = new StringBuilder();
@@ -57,9 +78,7 @@ public class Sample {
             sb.append(String.format(Locale.ITALY, "%.5f", val));
             sb.append(";");
         }
-        sb.append(label.getCode());
-        sb.append(";");
-        sb.append(label);
+        sb.append(label.getCode()).append(";").append(label);
         return sb.toString();
     }
 }

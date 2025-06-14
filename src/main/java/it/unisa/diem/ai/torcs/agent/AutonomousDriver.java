@@ -4,19 +4,25 @@ import it.unisa.diem.ai.torcs.model.*;
 import it.unisa.diem.ai.torcs.utils.*;
 import it.unisa.diem.ai.torcs.classifier.NearestNeighbor;
 
+/**
+ * AutonomousDriver è un agente di guida autonoma per TORCS.
+ * Utilizza due classificatori KNN distinti: uno per la guida normale,
+ * e uno per la modalità di recupero da situazioni critiche (fuori pista o stallo).
+ */
 public class AutonomousDriver extends BaseDriver {
+
     private final FeatureExtractor extractor;
     private final FeatureNormalizer normalizer;
-
     private final NearestNeighbor driverKNN;
     private final NearestNeighbor recoveryKNN;
-
     private final Dataset recoveryDataset;
     private final Dataset driverDataset;
 
-
     Action action = new Action();
 
+    /**
+     * Costruttore: carica i dataset, li normalizza e inizializza i classificatori.
+     */
     public AutonomousDriver() {
         normalizer = new FeatureNormalizer();
         extractor = new FeatureExtractor();
@@ -30,18 +36,26 @@ public class AutonomousDriver extends BaseDriver {
         recoveryKNN = new NearestNeighbor(recoveryDataset);
     }
 
+    /**
+     * Metodo principale di controllo, chiamato ad ogni ciclo di simulazione.
+     * Valuta se l'auto è bloccata; in tal caso attiva la recovery.
+     * Altrimenti predice l'azione corretta tramite KNN.
+     *
+     * @param sensors Modello dei sensori del veicolo
+     * @return un oggetto Action contenente i comandi da inviare a TORCS
+     */
     @Override
     public Action control(SensorModel sensors) {
         double angle = sensors.getAngleToTrackAxis();
 
-        if(Math.abs(angle) > stuckAngle) {
+        if (Math.abs(angle) > stuckAngle) {
             stuck++;
         } else {
             stuck = 0; // Reset se non è bloccato
         }
 
-        // AUTO BLOCCATA
-        if(stuck > stuckAngle) {
+        // Modalità recovery: auto considerata bloccata
+        if (stuck > stuckAngle) {
             System.out.println("Auto bloccata per: " + stuck + " turni, correzione in corso...");
             float steer = (float) (-sensors.getAngleToTrackAxis() / steerLock);
             int gear = -1;
@@ -56,25 +70,17 @@ public class AutonomousDriver extends BaseDriver {
             action.clutch = clutching(sensors, clutchMax);
 
         } else {
-            // AUTO NON BLOCCATA - GUIDA TRAMITE CLASSIFICATORE KNN
-            // 1. Estrai le feature dal sensore
+            // Guida normale: predizione tramite KNN
             FeatureVector rawFeatures = extractor.extractFeatures(sensors);
-
-            // 2. Normalizza le feature
             FeatureVector normalizedFeatures = normalizer.normalize(rawFeatures);
-
-            // 3. Crea un Sample "dummy" da classificare (label non serve)
             Sample testSample = new Sample(normalizedFeatures, null);
-
-            // 4. Predici la label tramite il classificatore KNN
-            // o il valore ottimale scelto
 
             int k = 1;
             int predictedClass = driverKNN.classify(testSample, k);
             Label predictedLabel = Label.fromCode(predictedClass);
             System.out.println("Predicted class: " + predictedLabel);
 
-            // 5. Mappa la label in un oggetto Action
+            // Conversione da label ad azione
             action.reset();
             switch (predictedLabel) {
                 case GIRA_SINISTRA:
@@ -93,7 +99,6 @@ public class AutonomousDriver extends BaseDriver {
                     retromarcia(action, sensors);
                     break;
                 default:
-                    /// DECELERAZIONE
                     decelera(action, sensors);
                     break;
             }
@@ -102,11 +107,17 @@ public class AutonomousDriver extends BaseDriver {
         return action;
     }
 
+    /**
+     * Metodo chiamato alla chiusura della simulazione.
+     */
     @Override
     public void shutdown() {
         System.out.println("AutonomousDriver: Bye bye!");
     }
 
+    /**
+     * Metodo chiamato al reset della simulazione.
+     */
     @Override
     public void reset() {
         System.out.println("AutonomousDriver: Restarting the race!");

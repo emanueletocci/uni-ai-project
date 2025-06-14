@@ -1,5 +1,9 @@
 /**
- * 
+ * Gestore della comunicazione via socket UDP con il simulatore TORCS.
+ * Si occupa di inviare e ricevere pacchetti UDP da/verso il server.
+ * Utilizza {@link DatagramSocket} per la comunicazione.
+ *
+ * Autore: Daniele Loiacono
  */
 package it.unisa.diem.ai.torcs.io;
 
@@ -11,27 +15,31 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
-/**
- * @author Daniele Loiacono
- * 
- */
 public class SocketHandler {
 
-	private InetAddress address;
-	private int port;
-	private DatagramSocket socket;
-	private boolean verbose;
+	private InetAddress address;     // Indirizzo IP del server
+	private final int port;                // Porta UDP del server
+	private DatagramSocket socket;   // Socket UDP usato per comunicare
+	private final boolean verbose;         // Modalità verbose (log attivi)
 
+	/**
+	 * Costruttore del SocketHandler.
+	 *
+	 * @param host indirizzo del server TORCS (es. "localhost")
+	 * @param port porta UDP del server (default: 3001)
+	 * @param verbose se true, stampa tutti i messaggi inviati/ricevuti
+	 */
 	public SocketHandler(String host, int port, boolean verbose) {
 
-		// set remote address
+		// Imposta l'indirizzo remoto
 		try {
 			this.address = InetAddress.getByName(host);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
 		this.port = port;
-		// init the socket
+
+		// Inizializza il socket UDP
 		try {
 			socket = new DatagramSocket();
 		} catch (SocketException e) {
@@ -40,8 +48,12 @@ public class SocketHandler {
 		this.verbose = verbose;
 	}
 
+	/**
+	 * Invia un messaggio stringa al server.
+	 *
+	 * @param msg il messaggio da inviare
+	 */
 	public void send(String msg) {
-
 		if (verbose)
 			System.out.println("Sending: " + msg);
 		try {
@@ -52,6 +64,11 @@ public class SocketHandler {
 		}
 	}
 
+	/**
+	 * Riceve un messaggio dal server (bloccante, senza timeout).
+	 *
+	 * @return il messaggio ricevuto, oppure null in caso di errore
+	 */
 	public String receive() {
 		try {
 			byte[] buffer = new byte[1024];
@@ -70,21 +87,28 @@ public class SocketHandler {
 		return null;
 	}
 
+	/**
+	 * Riceve un messaggio dal server con timeout specificato (in millisecondi).
+	 *
+	 * @param timeout durata massima dell'attesa (ms)
+	 * @return il messaggio ricevuto, oppure null se scade il timeout
+	 */
 	public String receive(int timeout) {
 		try {
-			socket.setSoTimeout(timeout);
-			String received = receive();
-			socket.setSoTimeout(0);
+			socket.setSoTimeout(timeout); // imposta timeout
+			String received = receive();  // chiama receive() normale
+			socket.setSoTimeout(0);       // resetta il timeout (bloccante)
 			return received;
 		} catch (SocketException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
 	}
 
+	/**
+	 * Chiude il socket e termina la comunicazione.
+	 */
 	public void close() {
 		socket.close();
 	}
-
 }

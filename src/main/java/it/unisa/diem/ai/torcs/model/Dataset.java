@@ -8,26 +8,58 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Rappresenta un dataset supervisionato composto da oggetti {@link Sample}.
+ * Fornisce funzionalità per aggiungere campioni, salvarli/caricarli da file CSV,
+ * normalizzare le feature, mescolare i dati e suddividerli in train/test set.
+ */
 public class Dataset {
+
+    /** Lista di campioni nel dataset */
     private final List<Sample> samples;
+
+    /** Riga di intestazione per file CSV (nominata come in SensorFeature) */
     private final String FIRST_FILE_LINE = SensorFeature.csvHeader();
+
+    /** Costruttore vuoto: inizializza un dataset senza campioni */
     public Dataset() {
         this.samples = new ArrayList<>();
     }
 
+    /**
+     * Aggiunge un campione al dataset.
+     *
+     * @param sample il campione da aggiungere
+     */
     public void addSample(Sample sample) {
         samples.add(sample);
     }
 
+    /**
+     * Restituisce la lista dei campioni nel dataset.
+     *
+     * @return lista dei campioni
+     */
     public List<Sample> getSamples() {
         return samples;
     }
 
+    /**
+     * Restituisce il numero totale di campioni presenti nel dataset.
+     *
+     * @return numero di campioni
+     */
     public int size() {
         return samples.size();
     }
 
-    // Carica il dataset da file CSV
+    /**
+     * Carica un dataset da file CSV.
+     * Il file deve contenere un'intestazione e righe con valori separati da punto e virgola.
+     *
+     * @param filePath percorso al file CSV
+     * @return oggetto Dataset caricato
+     */
     public static Dataset loadFromCSV(String filePath) {
         Dataset dataset = new Dataset();
         String expectedHeader = SensorFeature.csvHeader();
@@ -39,9 +71,8 @@ public class Dataset {
             while ((line = br.readLine()) != null) {
                 lineNumber++;
                 line = line.trim();
-                if (line.isEmpty()) continue; // Skip empty lines
+                if (line.isEmpty()) continue;
                 if (lineNumber == 1) {
-                    // Skip header, but optionally check it
                     if (!line.equals(expectedHeader)) {
                         System.err.println("Warning: header does not match expected format!");
                     }
@@ -64,10 +95,13 @@ public class Dataset {
         return dataset;
     }
 
-
-    // Salva il dataset su file CSV
+    /**
+     * Salva il dataset in un file CSV, includendo intestazione e tutti i campioni.
+     *
+     * @param filePath percorso del file di destinazione
+     */
     public void saveToCSV(String filePath) {
-        try(BufferedWriter bw = new BufferedWriter(new FileWriter(filePath, true))){
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath, true))) {
             bw.write(FIRST_FILE_LINE);
             bw.newLine();
             for (Sample sample : samples) {
@@ -79,6 +113,11 @@ public class Dataset {
         }
     }
 
+    /**
+     * Normalizza tutte le feature del dataset e salva il nuovo dataset normalizzato su file CSV.
+     *
+     * @param outputPath percorso del file CSV normalizzato da generare
+     */
     public void datasetNormalizer(String outputPath) {
         FeatureNormalizer normalizer = new FeatureNormalizer();
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath, false))) {
@@ -103,20 +142,10 @@ public class Dataset {
         }
     }
 
-
-    // Shuffle del dataset
+    /**
+     * Mescola casualmente l'ordine dei campioni nel dataset.
+     */
     public void shuffle() {
         Collections.shuffle(samples);
-    }
-
-    // Split in training e test set (percentuale tra 0 e 1)
-    public Dataset[] split(double trainRatio) {
-        int trainSize = (int) (samples.size() * trainRatio);
-        List<Sample> train = new ArrayList<>(samples.subList(0, trainSize));
-        List<Sample> test = new ArrayList<>(samples.subList(trainSize, samples.size()));
-        Dataset[] result = {new Dataset(), new Dataset()};
-        for (Sample s : train) result[0].addSample(s);
-        for (Sample s : test) result[1].addSample(s);
-        return result;
     }
 }

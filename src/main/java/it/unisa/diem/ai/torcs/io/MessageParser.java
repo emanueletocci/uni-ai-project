@@ -5,56 +5,72 @@ import java.util.Enumeration;
 import java.util.StringTokenizer;
 
 /**
- * Created by IntelliJ IDEA. User: Administrator Date: Feb 22, 2008 Time:
- * 6:17:32 PM
+ * Classe per il parsing dei messaggi ricevuti dal server TORCS.
+ * Estrae le letture dei sensori dal messaggio e le organizza in una tabella (nome -> valore).
+ * Supporta sia valori singoli che array (es. track, opponents, wheelSpinVel, focus).
+ * <p>
+ * Esempio di messaggio:
+ * "(speedX 45.0)(angle 0.01)(track -1.0 -1.0 ...)"
+ * </p>
+ *
+ * Creato con IntelliJ IDEA.
+ * Autore: Administrator
+ * Data: 22 Febbraio 2008
+ * Ora: 18:17:32
  */
 public class MessageParser {
+
+	/** Tabella contenente le letture del messaggio (nome -> valore o array di valori) */
+	private final Hashtable<String, Object> table = new Hashtable<>();
+
+	/** Messaggio originale ricevuto dal server */
+	private final String message;
+
 	/**
-	 * Analizza il messaggio dal serverbot e crea una tabella di nomi e valori associati delle letture
+	 * Costruttore che esegue direttamente il parsing del messaggio.
+	 *
+	 * @param message stringa contenente il messaggio completo dal server
 	 */
-
-	private Hashtable<String, Object> table = new Hashtable<String, Object>();
-	private String message;
-
 	public MessageParser(String message) {
 		this.message = message;
-		// System.out.println(message);
+
+		// Tokenizza il messaggio in base all'apertura della parentesi
 		StringTokenizer mt = new StringTokenizer(message, "(");
 		while (mt.hasMoreElements()) {
-			// process each reading
+			// Estrae una lettura
 			String reading = mt.nextToken();
-			// System.out.println(reading);
 			int endOfMessage = reading.indexOf(")");
 			if (endOfMessage > 0) {
 				reading = reading.substring(0, endOfMessage);
 			}
+
+			// Tokenizza la lettura in base agli spazi: primo token è il nome, il resto sono i valori
 			StringTokenizer rt = new StringTokenizer(reading, " ");
 			if (rt.countTokens() < 2) {
-				// System.out.println("Reading not recognized: " + reading);
+				// Lettura non valida (ignorata)
 			} else {
 				String readingName = rt.nextToken();
 				Object readingValue = "";
+
+				// Se la lettura è un array (es. track, opponents...), inizializza array di double
 				if (readingName.equals("opponents") || readingName.equals("track") || readingName.equals("wheelSpinVel")
-						|| readingName.equals("focus")) {// ML
-					// these readings have multiple values
+						|| readingName.equals("focus")) {
 					readingValue = new double[rt.countTokens()];
 					int position = 0;
-					// System.out.println(readingName);
+
 					while (rt.hasMoreElements()) {
 						String nextToken = rt.nextToken();
-						// System.out.print (nextToken);
 						try {
 							((double[]) readingValue)[position] = Double.parseDouble(nextToken);
 						} catch (Exception e) {
-							System.out.println(
-									"Error parsing value '" + nextToken + "' for " + readingName + " using 0.0");
+							System.out.println("Error parsing value '" + nextToken + "' for " + readingName + " using 0.0");
 							System.out.println("Message: " + message);
 							((double[]) readingValue)[position] = 0.0;
 						}
-						// System.out.println(" " +position +" " + ((double[])readingValue)[position]);
 						position++;
 					}
 				} else {
+					// Lettura scalare (valore singolo)
 					String token = rt.nextToken();
 					try {
 						readingValue = new Double(token);
@@ -64,11 +80,16 @@ public class MessageParser {
 						readingValue = new Double(0.0);
 					}
 				}
+
+				// Inserisce nella tabella (nome -> valore)
 				table.put(readingName, readingValue);
 			}
 		}
 	}
 
+	/**
+	 * Stampa tutte le letture presenti nella tabella.
+	 */
 	public void printAll() {
 		Enumeration<String> keys = table.keys();
 		while (keys.hasMoreElements()) {
@@ -78,10 +99,21 @@ public class MessageParser {
 		}
 	}
 
+	/**
+	 * Restituisce il valore associato a una lettura (es. "speedX", "track", ecc.).
+	 *
+	 * @param key nome della lettura
+	 * @return valore della lettura (Double o double[]), oppure null se non esiste
+	 */
 	public Object getReading(String key) {
 		return table.get(key);
 	}
 
+	/**
+	 * Restituisce il messaggio originale grezzo ricevuto dal server.
+	 *
+	 * @return il messaggio stringa originale
+	 */
 	public String getMessage() {
 		return message;
 	}

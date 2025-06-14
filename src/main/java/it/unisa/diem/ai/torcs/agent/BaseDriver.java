@@ -1,8 +1,15 @@
 package it.unisa.diem.ai.torcs.agent;
+
 import it.unisa.diem.ai.torcs.model.Action;
 import it.unisa.diem.ai.torcs.model.SensorModel;
 
-public abstract class BaseDriver extends Controller{
+/**
+ * Classe base per i driver di guida autonoma o manuale in TORCS.
+ * Fornisce metodi utility condivisi per gestione cambio marcia, sterzata,
+ * accelerazione, freno, ABS, frizione e strategie di manovra.
+ */
+public abstract class BaseDriver extends Controller {
+
     final int[] gearUp = { 5000, 6000, 6000, 6500, 7000, 0 };
     final int[] gearDown = { 0, 2500, 3000, 3000, 3500, 3500 };
 
@@ -39,6 +46,9 @@ public abstract class BaseDriver extends Controller{
         super();
     }
 
+    /**
+     * Calcola la marcia da usare in base agli RPM attuali.
+     */
     int getGear(SensorModel sensors) {
         int gear = sensors.getGear();
         double rpm = sensors.getRPM();
@@ -48,6 +58,9 @@ public abstract class BaseDriver extends Controller{
         return gear;
     }
 
+    /**
+     * Calcola l'angolo di sterzata in base all'angolo e alla posizione sulla pista.
+     */
     float getSteer(SensorModel sensors) {
         float targetAngle = (float) (sensors.getAngleToTrackAxis() - sensors.getTrackPosition() * 0.5);
         if (sensors.getSpeed() > steerSensitivityOffset)
@@ -56,6 +69,9 @@ public abstract class BaseDriver extends Controller{
             return (targetAngle) / steerLock;
     }
 
+    /**
+     * Calcola l'accelerazione target in base ai sensori di bordo pista e velocità.
+     */
     float getAccel(SensorModel sensors) {
         if (sensors.getTrackPosition() > -1 && sensors.getTrackPosition() < 1) {
             float rxSensor = (float) sensors.getTrackEdgeSensors()[10];
@@ -66,23 +82,19 @@ public abstract class BaseDriver extends Controller{
             if (sensorsensor > maxSpeedDist || (sensorsensor >= rxSensor && sensorsensor >= sxSensor))
                 targetSpeed = maxSpeed;
             else {
-                if (rxSensor > sxSensor) {
-                    float h = sensorsensor * sin5;
-                    float b = rxSensor - sensorsensor * cos5;
-                    float sinAngle = b * b / (h * h + b * b);
-                    targetSpeed = maxSpeed * (sensorsensor * sinAngle / maxSpeedDist);
-                } else {
-                    float h = sensorsensor * sin5;
-                    float b = sxSensor - sensorsensor * cos5;
-                    float sinAngle = b * b / (h * h + b * b);
-                    targetSpeed = maxSpeed * (sensorsensor * sinAngle / maxSpeedDist);
-                }
+                float h = sensorsensor * sin5;
+                float b = (rxSensor > sxSensor ? rxSensor : sxSensor) - sensorsensor * cos5;
+                float sinAngle = b * b / (h * h + b * b);
+                targetSpeed = maxSpeed * (sensorsensor * sinAngle / maxSpeedDist);
             }
             return (float) (2 / (1 + Math.exp(sensors.getSpeed() - targetSpeed)) - 1);
         } else
             return (float) 0.3;
     }
 
+    /**
+     * Gestione automatica della frizione in base a tempo di gara e distanza percorsa.
+     */
     float clutching(SensorModel sensors, float clutch) {
         float maxClutch = clutchMax;
         if (sensors.getCurrentLapTime() < clutchDeltaTime && getStage() == Stage.RACE
@@ -107,6 +119,9 @@ public abstract class BaseDriver extends Controller{
         return clutch;
     }
 
+    /**
+     * Simula un sistema ABS per prevenire il bloccaggio delle ruote durante la frenata.
+     */
     float filterABS(SensorModel sensors, float brake) {
         float speed = (float) (sensors.getSpeed() / 3.6);
         if (speed < absMinSpeed)
@@ -119,12 +134,12 @@ public abstract class BaseDriver extends Controller{
         if (slip > absSlip) {
             brake = brake - (slip - absSlip) / absRange;
         }
-        if (brake < 0)
-            return 0;
-        else
-            return brake;
+        return Math.max(0, brake);
     }
 
+    /**
+     * Azione completa di accelerazione.
+     */
     void accelera(Action action, SensorModel sensors) {
         action.accelerate = 1.0;
         action.brake = 0.0;
@@ -133,6 +148,9 @@ public abstract class BaseDriver extends Controller{
         action.gear = getGear(sensors);
     }
 
+    /**
+     * Azione completa di frenata.
+     */
     void frena(Action action, SensorModel sensors) {
         action.brake = filterABS(sensors, 1f);
         action.clutch = clutching(sensors, (float) action.clutch);
@@ -140,23 +158,33 @@ public abstract class BaseDriver extends Controller{
         action.accelerate = 0.0f;
     }
 
+    /**
+     * Azione di retromarcia.
+     */
     void retromarcia(Action action, SensorModel sensors) {
         action.gear = -1;
         action.accelerate = 1.0f;
         action.brake = 0.0;
         action.clutch = clutchMax;
     }
+
+    /**
+     * Azione di sterzata verso sinistra.
+     */
     void giraSinistra(Action action, SensorModel sensors) {
-        if(sensors.getSpeed() < 15)
+        if (sensors.getSpeed() < 15)
             action.accelerate = 0.5;
-        action.steering = 0.3f;  // curva ben marcata
-        action.brake = 0.0f;      // potresti metterlo a 0.1f in curva stretta
-        action.gear = sensors.getGear();  // ❌ niente cambio automatico in curva
-        action.clutch = 0.0f;     // non necessario
+        action.steering = 0.3f;
+        action.brake = 0.0f;
+        action.gear = sensors.getGear();
+        action.clutch = 0.0f;
     }
 
+    /**
+     * Azione di sterzata verso destra.
+     */
     void giraDestra(Action action, SensorModel sensors) {
-        if(sensors.getSpeed() < 15)
+        if (sensors.getSpeed() < 15)
             action.accelerate = 0.5;
         action.steering = -0.3f;
         action.brake = 0.0f;
@@ -164,27 +192,28 @@ public abstract class BaseDriver extends Controller{
         action.clutch = 0.0f;
     }
 
+    /**
+     * Azione di decelerazione controllata (fallback).
+     */
     void decelera(Action action, SensorModel sensors) {
         action.steering = 0.0f;
-        action.accelerate = 0.2f; // bassa spinta
+        action.accelerate = 0.2f;
         action.brake = 0.0f;
         action.gear = sensors.getGear();
         action.clutch = 0.0f;
     }
 
+    /**
+     * Inizializza l'array degli angoli dei sensori di bordo pista in gradi.
+     * @return array di 19 angoli in gradi da -90 a 90
+     */
     @Override
     public float[] initAngles() {
         float[] angles = new float[19];
-
-        /*
-         * set angles as
-         * {-90,-75,-60,-45,-30,-20,-15,-10,-5,0,5,10,15,20,30,45,60,75,90}
-         */
         for (int i = 0; i < 5; i++) {
             angles[i] = -90 + i * 15;
             angles[18 - i] = 90 - i * 15;
         }
-
         for (int i = 5; i < 9; i++) {
             angles[i] = -20 + (i - 5) * 5;
             angles[18 - i] = 20 - (i - 5) * 5;
@@ -193,11 +222,17 @@ public abstract class BaseDriver extends Controller{
         return angles;
     }
 
+    /**
+     * Stampa un messaggio al reset della simulazione.
+     */
     @Override
     public void reset() {
         System.out.println("Restarting the race!");
     }
 
+    /**
+     * Stampa un messaggio alla chiusura della simulazione.
+     */
     @Override
     public void shutdown() {
         System.out.println("Bye bye!");

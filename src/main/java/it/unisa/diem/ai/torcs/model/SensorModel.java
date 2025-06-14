@@ -1,56 +1,119 @@
 package it.unisa.diem.ai.torcs.model;
 
 /**
- * Created by IntelliJ IDEA. User: Administrator Date: Mar 4, 2008 Time:
- * 12:18:47 PM
+ * Interfaccia che definisce il contratto per l’accesso ai dati dei sensori in TORCS.
+ * Implementata da classi che forniscono letture sensoriali in tempo reale dal simulatore.
+ * I sensori includono informazioni sul veicolo, sul tracciato, sugli avversari e su altri parametri dinamici.
+ *
+ * @author
  */
 public interface SensorModel {
 
+	// === INFORMAZIONI BASE SUL VEICOLO E TRACCIATO ===
 
-	// Informazioni di base sull'auto e sul tracciato
+	/**
+	 * @return la velocità longitudinale del veicolo (asse X) in km/h.
+	 */
+    double getSpeed();
 
-	public double getSpeed();
+	/**
+	 * @return l’angolo (in radianti) tra l’asse longitudinale del veicolo e l’asse centrale della pista.
+	 */
+    double getAngleToTrackAxis();
 
-	public double getAngleToTrackAxis();
+	/**
+	 * @return un array di 19 valori che rappresentano la distanza dai bordi della pista a varie angolazioni (da -90° a +90°).
+	 */
+    double[] getTrackEdgeSensors();
 
-	public double[] getTrackEdgeSensors();
+	/**
+	 * @return un array di 5 valori che rappresentano le letture dei sensori di messa a fuoco direzionale.
+	 */
+    double[] getFocusSensors();
 
-	public double[] getFocusSensors();// ML
+	/**
+	 * @return la posizione laterale del veicolo rispetto al centro della pista, in un intervallo [-1, 1].
+	 */
+    double getTrackPosition();
 
-	public double getTrackPosition();
+	/**
+	 * @return la marcia attualmente inserita (-1 = retromarcia, 0 = folle, 1–6 = marce avanti).
+	 */
+    int getGear();
 
-	public int getGear();
 
-	// informazioni di base sulle altre auto (utili solo per le gare con più auto)
+	// === INFORMAZIONI SUGLI AVVERSARI (SOLO GARE MULTI-AUTO) ===
 
-	public double[] getOpponentSensors();
+	/**
+	 * @return un array di 36 valori che indicano la distanza dagli avversari in ogni direzione (risoluzione 10°).
+	 */
+    double[] getOpponentSensors();
 
-	public int getRacePosition();
+	/**
+	 * @return la posizione corrente del veicolo nella gara (es. 1 = primo).
+	 */
+    int getRacePosition();
 
-	// informazioni aggiuntive (utilizzare se necessario)
 
-	public double getLateralSpeed();
+	// === INFORMAZIONI ADDIZIONALI ===
 
-	public double getCurrentLapTime();
+	/**
+	 * @return la velocità laterale del veicolo (asse Y) in km/h.
+	 */
+    double getLateralSpeed();
 
-	public double getDamage();
+	/**
+	 * @return il tempo corrente del giro in corso, in secondi.
+	 */
+    double getCurrentLapTime();
 
-	public double getDistanceFromStartLine();
+	/**
+	 * @return il livello di danni subiti dal veicolo (valore cumulativo).
+	 */
+    double getDamage();
 
-	public double getDistanceRaced();
+	/**
+	 * @return la distanza dalla linea di partenza lungo la pista, in metri.
+	 */
+    double getDistanceFromStartLine();
 
-	public double getFuelLevel();
+	/**
+	 * @return la distanza totale percorsa in gara fino a questo momento, in metri.
+	 */
+    double getDistanceRaced();
 
-	public double getLastLapTime();
+	/**
+	 * @return il livello corrente del carburante nel serbatoio, in litri.
+	 */
+    double getFuelLevel();
 
-	public double getRPM();
+	/**
+	 * @return la durata del giro precedente, in secondi.
+	 */
+    double getLastLapTime();
 
-	public double[] getWheelSpinVelocity();
+	/**
+	 * @return i giri al minuto (RPM) attuali del motore.
+	 */
+    double getRPM();
 
-	public double getZSpeed();
+	/**
+	 * @return un array con 4 valori che rappresentano la velocità di rotazione di ciascuna ruota.
+	 */
+    double[] getWheelSpinVelocity();
 
-	public double getZ();
+	/**
+	 * @return la velocità verticale del veicolo (asse Z), in km/h.
+	 */
+    double getZSpeed();
 
-	public String getMessage();
+	/**
+	 * @return la posizione verticale del veicolo (altezza sul piano), in metri.
+	 */
+    double getZ();
 
+	/**
+	 * @return il messaggio grezzo completo ricevuto dal simulatore (per debug/logging).
+	 */
+    String getMessage();
 }
