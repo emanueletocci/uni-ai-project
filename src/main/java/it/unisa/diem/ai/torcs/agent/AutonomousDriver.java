@@ -21,7 +21,7 @@ public class AutonomousDriver extends BaseDriver {
         normalizer = new FeatureNormalizer();
         extractor = new FeatureExtractor();
 
-        driverDataset = Dataset.loadFromCSV("data/driver_dataset.csv");
+        driverDataset = Dataset.loadFromCSV("data/driver_dataset_balanced.csv");
         recoveryDataset = Dataset.loadFromCSV("data/recovery_dataset.csv");
         driverDataset.shuffle();
         recoveryDataset.shuffle();
@@ -69,7 +69,7 @@ public class AutonomousDriver extends BaseDriver {
             // 4. Predici la label tramite il classificatore KNN
             // o il valore ottimale scelto
 
-            int k = 5;
+            int k = 3;
             int predictedClass = driverKNN.classify(testSample, k);
             Label predictedLabel = Label.fromCode(predictedClass);
             System.out.println("Predicted class: " + predictedLabel);
