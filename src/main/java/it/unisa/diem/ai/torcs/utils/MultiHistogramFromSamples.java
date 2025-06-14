@@ -6,14 +6,29 @@ import java.util.*;
 import java.util.List;
 import it.unisa.diem.ai.torcs.model.*;
 
+/**
+ * Classe per la visualizzazione di istogrammi multipli a partire da un dataset di Sample.
+ * Confronta le distribuzioni dei valori raw e normalizzati per ciascuna feature.
+ */
 public class MultiHistogramFromSamples {
 
+    /**
+     * Pannello Swing che disegna un istogramma per una specifica feature.
+     */
     public static class HistogramPanel extends JPanel {
         private final int binCount;
         private final String featureName;
         private final int[] frequencies;
         private final double min, max;
 
+        /**
+         * Costruisce un istogramma per una determinata feature.
+         *
+         * @param featureName nome della feature (per il titolo del pannello)
+         * @param samples lista di campioni da cui estrarre i valori
+         * @param feature feature da visualizzare
+         * @param binCount numero di intervalli dell’istogramma
+         */
         public HistogramPanel(String featureName, List<Sample> samples, SensorFeature feature, int binCount) {
             this.featureName = featureName;
             this.binCount = binCount;
@@ -37,6 +52,9 @@ public class MultiHistogramFromSamples {
             setPreferredSize(new Dimension(400, 250));
         }
 
+        /**
+         * Disegna l'istogramma sul pannello.
+         */
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
@@ -48,8 +66,8 @@ public class MultiHistogramFromSamples {
             int barWidth = (w - 2 * margin) / binCount;
 
             g2.setColor(Color.BLACK);
-            g2.drawLine(margin, h - margin, w - margin, h - margin);
-            g2.drawLine(margin, margin, margin, h - margin);
+            g2.drawLine(margin, h - margin, w - margin, h - margin); // asse x
+            g2.drawLine(margin, margin, margin, h - margin); // asse y
 
             g2.drawString(featureName, w / 2 - g.getFontMetrics().stringWidth(featureName) / 2, margin - 10);
 
@@ -76,7 +94,6 @@ public class MultiHistogramFromSamples {
                     g2.drawString(label, x + (barWidth - labelWidth) / 2, h - margin + 15);
                 }
 
-                // Quantitativi sopra la barra
                 String valueStr = String.valueOf(frequencies[i]);
                 int vw = g.getFontMetrics().stringWidth(valueStr);
                 g2.setColor(Color.BLACK);
@@ -85,10 +102,21 @@ public class MultiHistogramFromSamples {
         }
     }
 
+    /**
+     * Carica una lista di Sample da un file CSV.
+     *
+     * @param path percorso del file CSV
+     * @return lista di Sample
+     */
     public static List<Sample> loadSamples(String path) {
         return Dataset.loadFromCSV(path).getSamples();
     }
 
+    /**
+     * Metodo principale. Visualizza istogrammi per ogni feature in versione RAW e NORMALIZZATA.
+     *
+     * @param args non utilizzato
+     */
     public static void main(String[] args) {
         String rawPath = "data/raw_dataset.csv";
         String normPath = "data/dataset_normalizzato.csv";
@@ -106,7 +134,6 @@ public class MultiHistogramFromSamples {
             grid.add(new HistogramPanel("NORM - " + feature.name(), normSamples, feature, 20));
         }
 
-        // Label distribution panel (bottom row)
         grid.add(new LabelDistributionPanel(rawSamples, "RAW - LABEL"));
         grid.add(new LabelDistributionPanel(normSamples, "NORM - LABEL"));
 
@@ -117,10 +144,19 @@ public class MultiHistogramFromSamples {
         frame.setVisible(true);
     }
 
+    /**
+     * Pannello Swing che mostra la distribuzione delle etichette (label) in un dataset.
+     */
     public static class LabelDistributionPanel extends JPanel {
         private final Map<it.unisa.diem.ai.torcs.model.Label, Integer> labelCounts;
         private final String title;
 
+        /**
+         * Costruttore del pannello per la distribuzione delle label.
+         *
+         * @param samples lista di Sample da cui estrarre le label
+         * @param title titolo del pannello
+         */
         public LabelDistributionPanel(List<Sample> samples, String title) {
             this.title = title;
             labelCounts = new LinkedHashMap<>();
@@ -134,6 +170,9 @@ public class MultiHistogramFromSamples {
             setPreferredSize(new Dimension(500, 200));
         }
 
+        /**
+         * Disegna la distribuzione delle label come istogramma.
+         */
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
@@ -164,7 +203,6 @@ public class MultiHistogramFromSamples {
                 int lw = g.getFontMetrics().stringWidth(labelStr);
                 g2.drawString(labelStr, x + (barWidth - lw) / 2, h - margin + 15);
 
-                // Quantitativi sopra la barra
                 String valueStr = String.valueOf(entry.getValue());
                 int vw = g.getFontMetrics().stringWidth(valueStr);
                 g2.drawString(valueStr, x + (barWidth - vw) / 2, y - 5);
