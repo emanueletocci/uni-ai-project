@@ -8,14 +8,18 @@ public class AutonomousDriver extends BaseDriver {
     private final FeatureExtractor extractor;
     private final FeatureNormalizer normalizer;
     private final NearestNeighbor knn;
+    private final Dataset rawDataset;
+    private final Dataset datasetNormalizzato;
+
 
     Action action = new Action();
 
     public AutonomousDriver() {
-        Dataset trainingSet = Dataset.loadFromCSV("data/raw_dataset.csv");
+        rawDataset = Dataset.loadFromCSV("data/raw_dataset.csv");
+        datasetNormalizzato = Dataset.loadFromCSV("data/dataset_normalizzato.csv");
         normalizer = new FeatureNormalizer();
         extractor = new FeatureExtractor();
-        knn = new NearestNeighbor(trainingSet);
+        knn = new NearestNeighbor(datasetNormalizzato);
     }
 
     @Override
@@ -52,7 +56,7 @@ public class AutonomousDriver extends BaseDriver {
             FeatureVector normalizedFeatures = normalizer.normalize(rawFeatures);
 
             // 3. Crea un Sample "dummy" da classificare (label non serve)
-            Sample testSample = new Sample(rawFeatures, null);
+            Sample testSample = new Sample(normalizedFeatures, null);
 
             // 4. Predici la label tramite il classificatore KNN
             // o il valore ottimale scelto

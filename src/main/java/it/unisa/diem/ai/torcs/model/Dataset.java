@@ -1,9 +1,12 @@
 package it.unisa.diem.ai.torcs.model;
 
+import it.unisa.diem.ai.torcs.utils.FeatureNormalizer;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 public class Dataset {
     private final List<Sample> samples;
@@ -75,6 +78,31 @@ public class Dataset {
             e.printStackTrace();
         }
     }
+
+    public void datasetNormalizer(String outputPath) {
+        FeatureNormalizer normalizer = new FeatureNormalizer();
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath, false))) {
+            writer.write(SensorFeature.csvHeader());
+            writer.newLine();
+
+            for (Sample sample : samples) {
+                FeatureVector normalized = normalizer.normalize(sample.getFeature());
+                StringBuilder sb = new StringBuilder();
+                for (Double val : normalized.getValues()) {
+                    sb.append(String.format(Locale.US, "%.5f;", val));
+                }
+                sb.append(sample.getLabel().getCode()).append(";");
+                sb.append(sample.getLabel().toString());
+                writer.write(sb.toString());
+                writer.newLine();
+            }
+
+            System.out.println("Dataset normalizzato salvato in: " + outputPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     // Shuffle del dataset
     public void shuffle() {

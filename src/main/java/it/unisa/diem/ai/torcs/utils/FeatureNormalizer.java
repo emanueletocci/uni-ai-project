@@ -17,8 +17,8 @@ public class FeatureNormalizer {
     public static final double MAX_SPEED_X = 300.0;
 
     /** Velocità massima in retromarcia (in modulo, km/h). */
-    public static final double MIN_NEGATIVE_SPEED = 0.001;
-    public static final double MAX_NEGATIVE_SPEED = 60.0;
+    public static final double MIN_NEGATIVE_SPEED = -60.0;
+    public static final double MAX_NEGATIVE_SPEED = -0.001;
 
     /** Posizione laterale massima sulla pista (track position ∈ [-1, 1]). */
     public static final double MIN_TRACK_POSITION = -1.0;
@@ -44,10 +44,12 @@ public class FeatureNormalizer {
             switch (features[i]) {
                 case SPEED_X:
                     if(val >=0 ){
-                        min = MIN_SPEED_X; max = MAX_SPEED_X;
+                        min = MIN_SPEED_X;
+                        max = MAX_SPEED_X;
                     } else {
                         // Velocità negativa, usa il range per la retromarcia
-                        min = MIN_NEGATIVE_SPEED; max = MAX_NEGATIVE_SPEED;
+                        min = MIN_NEGATIVE_SPEED; // -60.0
+                        max = MAX_NEGATIVE_SPEED; // -0.001
                     }
                     break;
                 case ANGLE_TO_TRACK_AXIS:
@@ -63,10 +65,9 @@ public class FeatureNormalizer {
         return new FeatureVector(normalized);
     }
 
-    /**
-     * Normalizzatore min-max con clipping tra 0 e 1.
-     */
     private static double normalizzatoreMinMax(double data, double min, double max) {
-        return (data-min)/(max-min);
+        double normalized = (data - min) / (max - min);
+        return Math.max(0.0, Math.min(1.0, normalized));  // clipping
     }
+
 }
