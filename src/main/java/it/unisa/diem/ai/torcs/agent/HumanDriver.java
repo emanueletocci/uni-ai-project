@@ -38,7 +38,7 @@ public class HumanDriver extends BaseDriver {
     public Action control(SensorModel sensors) {
         radar.updateSensors(sensors.getTrackEdgeSensors());
 
-        // 1. Leggi i comandi dalla tastiera (KeyInput)
+        // Leggo i comandi dalla tastiera (KeyInput)
         Action action = new Action();
         double speedX = sensors.getSpeed();
 
