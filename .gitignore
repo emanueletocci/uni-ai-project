@@ -68,3 +68,4 @@ src/classes/it/unisa/diem/ai/torcs/utils/FeatureExtractor.class
 src/classes/it/unisa/diem/ai/torcs/utils/FeatureNormalizer$1.class
 src/classes/it/unisa/diem/ai/torcs/utils/FeatureNormalizer.class
 src/classes/it/unisa/diem/ai/torcs/utils/RadarVisualizer.class
+/src/classes

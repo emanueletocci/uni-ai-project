@@ -47,28 +47,23 @@ public class AutonomousDriver extends BaseDriver {
      */
     @Override
     public Action control(SensorModel sensors) {
-        double angle = sensors.getAngleToTrackAxis();
+        boolean isRecovery = stuck > stuckAngle
+                || Math.abs(sensors.getAngleToTrackAxis()) > 0.5
+                || Math.abs(sensors.getTrackPosition()) > 0.9
+                || Math.abs(sensors.getLateralSpeed()) > 15;
 
-        boolean isDriving = Math.abs(sensors.getTrackPosition()) <= 0.9 && Math.abs(angle) <= 0.5 && Math.abs(sensors.getSpeed()) <= 15;
+        // Estrai feature e normalizzale
+        FeatureVector rawFeatures = extractor.extractFeatures(sensors);
+        FeatureVector normalizedFeatures = normalizer.normalize(rawFeatures);
+        Sample testSample = new Sample(normalizedFeatures, null);
+
         // Modalità recovery: auto considerata bloccata
-        if (!isDriving) {
-            // Estrai feature e normalizzale
-            FeatureVector rawFeatures = extractor.extractFeatures(sensors);
-            FeatureVector normalizedFeatures = normalizer.normalize(rawFeatures);
-            Sample testSample = new Sample(normalizedFeatures, null);
-
-                // --- RECOVERY CHECK ---
-            boolean isRecovery = stuck > stuckAngle
-                    || Math.abs(sensors.getAngleToTrackAxis()) > 0.5
-                    || Math.abs(sensors.getTrackPosition()) > 0.9
-                    || Math.abs(sensors.getLateralSpeed()) > 15;
-
+        if (isRecovery) {
             int k = 1;
-            NearestNeighbor knnToUse = isRecovery ? recoveryKNN : driverKNN;
-            int predictedClass = knnToUse.classify(testSample, k);
+            int predictedClass = recoveryKNN.classify(testSample, k);
             Label predictedLabel = Label.fromCode(predictedClass);
 
-            System.out.println((isRecovery ? "🛟 [RECOVERY]" : "🟢 [NORMAL]") + " Predicted: " + predictedLabel);
+            System.out.println("🛟 [RECOVERY] Predicted: " + predictedLabel);
 
             // Applica l’azione in base alla label
             action.reset();
@@ -83,14 +78,10 @@ public class AutonomousDriver extends BaseDriver {
 
         } else {
             // Guida normale: predizione tramite KNN
-            FeatureVector rawFeatures = extractor.extractFeatures(sensors);
-            FeatureVector normalizedFeatures = normalizer.normalize(rawFeatures);
-            Sample testSample = new Sample(normalizedFeatures, null);
-
             int k = 1;
             int predictedClass = driverKNN.classify(testSample, k);
             Label predictedLabel = Label.fromCode(predictedClass);
-            System.out.println("Predicted class: " + predictedLabel);
+            System.out.println("\uD83D\uDFE2 [NORMAL] Predicted: " + predictedLabel);
 
             // Conversione da label ad azione
             action.reset();
