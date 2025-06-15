@@ -53,14 +53,9 @@ public class AutonomousDriver extends BaseDriver {
     public Action control(SensorModel sensors) {
         double angle = sensors.getAngleToTrackAxis();
 
-        if (Math.abs(angle) > stuckAngle) {
-            stuck++;
-        } else {
-            stuck = 0; // Reset se non è bloccato
-        }
-
+        boolean isDriving = Math.abs(sensors.getTrackPosition()) <= 0.9 && Math.abs(angle) <= 0.5 && Math.abs(sensors.getSpeed()) <= 15;
         // Modalità recovery: auto considerata bloccata
-        if (stuck > stuckAngle) {
+        if (!isDriving) {
             // Estrai feature e normalizzale
             FeatureVector rawFeatures = extractor.extractFeatures(sensors);
             FeatureVector normalizedFeatures = normalizer.normalize(rawFeatures);
@@ -76,20 +71,6 @@ public class AutonomousDriver extends BaseDriver {
             NearestNeighbor knnToUse = isRecovery ? recoveryKNN : driverKNN;
             int predictedClass = knnToUse.classify(testSample, k);
             Label predictedLabel = Label.fromCode(predictedClass);
-// Verifica se la stessa label è stata predetta per troppi cicli
-            if (predictedLabel == previousLabel) {
-                sameLabelCount++;
-            } else {
-                sameLabelCount = 0;
-            }
-            previousLabel = predictedLabel;
-
-// Se bloccato sulla stessa azione, forzatura (fallback)
-            if (sameLabelCount > SAME_LABEL_LIMIT*3) {
-                System.out.println("⚠️ Label ripetuta (" + predictedLabel + ") → fallback forzato");
-                predictedLabel = Label.ACCELERA;
-                sameLabelCount = 0; // reset contatore dopo fallback
-            }
 
             System.out.println((isRecovery ? "🛟 [RECOVERY]" : "🟢 [NORMAL]") + " Predicted: " + predictedLabel);
 

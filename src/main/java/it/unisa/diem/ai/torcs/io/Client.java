@@ -42,6 +42,7 @@ public class Client {
 	 * @param args argomenti da riga di comando per configurare la simulazione
 	 */
 	public static void main(String[] args) {
+
 		parseParameters(args); // Analizza i parametri della riga di comando
 
 		SocketHandler mySocket = new SocketHandler(host, port, verbose);
