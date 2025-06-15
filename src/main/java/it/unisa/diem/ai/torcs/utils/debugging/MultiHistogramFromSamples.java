@@ -119,8 +119,8 @@ public class MultiHistogramFromSamples {
      */
     public static void main(String[] args) {
         // Puoi personalizzare i percorsi e le etichette dei dataset qui
-        String dataset1Path = "data/raw_dataset.csv";
-        String dataset2Path = "data/dataset_normalizzato.csv";
+        String dataset1Path = "data/recovery_dataset.csv";
+        String dataset2Path = "data/driver_dataset.csv";
         String label1 = "DATASET 1";
         String label2 = "DATASET 2";
 

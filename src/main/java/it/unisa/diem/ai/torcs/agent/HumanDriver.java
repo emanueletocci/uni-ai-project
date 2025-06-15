@@ -115,8 +115,8 @@ public class HumanDriver extends BaseDriver {
     public void shutdown() {
         rawDataset.saveToCSV("data/raw_dataset.csv");
         datasetNormalizzato.saveToCSV("data/dataset_normalizzato.csv");
-        //driverDataset.saveToCSV("data/driver_dataset.csv");
-        recoveryDataset.saveToCSV("data/recovery_dataset.csv");
+        driverDataset.saveToCSV("data/driver_dataset.csv");
+        //recoveryDataset.saveToCSV("data/recovery_dataset.csv");
     }
 
     @Override
