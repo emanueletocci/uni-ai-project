@@ -18,6 +18,11 @@ public class AutonomousDriver extends BaseDriver {
     private final Dataset recoveryDataset;
     private final Dataset driverDataset;
 
+    private Label previousLabel = null;
+    private int sameLabelCount = 0;
+    private static final int SAME_LABEL_LIMIT = 30;
+
+
     Action action = new Action();
 
     /**
@@ -71,6 +76,20 @@ public class AutonomousDriver extends BaseDriver {
             NearestNeighbor knnToUse = isRecovery ? recoveryKNN : driverKNN;
             int predictedClass = knnToUse.classify(testSample, k);
             Label predictedLabel = Label.fromCode(predictedClass);
+// Verifica se la stessa label è stata predetta per troppi cicli
+            if (predictedLabel == previousLabel) {
+                sameLabelCount++;
+            } else {
+                sameLabelCount = 0;
+            }
+            previousLabel = predictedLabel;
+
+// Se bloccato sulla stessa azione, forzatura (fallback)
+            if (sameLabelCount > SAME_LABEL_LIMIT*3) {
+                System.out.println("⚠️ Label ripetuta (" + predictedLabel + ") → fallback forzato");
+                predictedLabel = Label.ACCELERA;
+                sameLabelCount = 0; // reset contatore dopo fallback
+            }
 
             System.out.println((isRecovery ? "🛟 [RECOVERY]" : "🟢 [NORMAL]") + " Predicted: " + predictedLabel);
 
@@ -91,7 +110,7 @@ public class AutonomousDriver extends BaseDriver {
             FeatureVector normalizedFeatures = normalizer.normalize(rawFeatures);
             Sample testSample = new Sample(normalizedFeatures, null);
 
-            int k = 1;
+            int k = 3;
             int predictedClass = driverKNN.classify(testSample, k);
             Label predictedLabel = Label.fromCode(predictedClass);
             System.out.println("Predicted class: " + predictedLabel);
