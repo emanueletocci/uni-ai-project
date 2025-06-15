@@ -75,7 +75,7 @@ public class AutonomousDriver extends BaseDriver {
             FeatureVector normalizedFeatures = normalizer.normalize(rawFeatures);
             Sample testSample = new Sample(normalizedFeatures, null);
 
-            int k = 1;
+            int k = 3;
             int predictedClass = driverKNN.classify(testSample, k);
             Label predictedLabel = Label.fromCode(predictedClass);
             System.out.println("Predicted class: " + predictedLabel);

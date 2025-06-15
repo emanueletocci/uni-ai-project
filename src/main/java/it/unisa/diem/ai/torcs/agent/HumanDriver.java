@@ -12,6 +12,7 @@ import it.unisa.diem.ai.torcs.utils.RadarVisualizer;
 import javax.swing.*;
 
 public class HumanDriver extends BaseDriver {
+    private int drittoCounter = 0;
     private static final RadarVisualizer radar = new RadarVisualizer();
     static {
         SwingUtilities.invokeLater(ContinuousCharReaderUI::new);
@@ -76,6 +77,13 @@ public class HumanDriver extends BaseDriver {
 
         // --- Dataset ---
         Label label = Label.fromAction(action);
+        // Riduci il numero di esempi ACCELERA_DRITTO per bilanciare il dataset
+        if (label == Label.ACCELERA) {
+            drittoCounter++;
+            if (drittoCounter % 5 != 0) {
+                return action; // Salta la registrazione (4 su 5)
+            }
+        }
         FeatureVector rawFeatures = extractor.extractFeatures(sensors);
         FeatureVector featuresNormalizzate = normalizer.normalize(rawFeatures);
 
@@ -107,7 +115,7 @@ public class HumanDriver extends BaseDriver {
     public void shutdown() {
         rawDataset.saveToCSV("data/raw_dataset.csv");
         datasetNormalizzato.saveToCSV("data/dataset_normalizzato.csv");
-        driverDataset.saveToCSV("data/driver_dataset.csv");
+        //driverDataset.saveToCSV("data/driver_dataset.csv");
         recoveryDataset.saveToCSV("data/recovery_dataset.csv");
     }
 
