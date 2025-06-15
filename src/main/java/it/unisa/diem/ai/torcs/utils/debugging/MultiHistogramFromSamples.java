@@ -118,24 +118,27 @@ public class MultiHistogramFromSamples {
      * @param args non utilizzato
      */
     public static void main(String[] args) {
-        String rawPath = "data/raw_dataset.csv";
-        String normPath = "data/dataset_normalizzato.csv";
+        // Puoi personalizzare i percorsi e le etichette dei dataset qui
+        String dataset1Path = "data/raw_dataset.csv";
+        String dataset2Path = "data/dataset_normalizzato.csv";
+        String label1 = "DATASET 1";
+        String label2 = "DATASET 2";
 
-        List<Sample> rawSamples = loadSamples(rawPath);
-        List<Sample> normSamples = loadSamples(normPath);
+        List<Sample> samples1 = loadSamples(dataset1Path);
+        List<Sample> samples2 = loadSamples(dataset2Path);
 
-        JFrame frame = new JFrame("Confronto distribuzioni RAW vs NORMALIZZATO");
+        JFrame frame = new JFrame("Confronto distribuzioni " + label1 + " vs " + label2);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JPanel grid = new JPanel(new GridLayout(SensorFeature.values().length + 1, 2, 10, 10));
 
         for (SensorFeature feature : SensorFeature.values()) {
-            grid.add(new HistogramPanel("RAW - " + feature.name(), rawSamples, feature, 20));
-            grid.add(new HistogramPanel("NORM - " + feature.name(), normSamples, feature, 20));
+            grid.add(new HistogramPanel(label1 + " - " + feature.name(), samples1, feature, 20));
+            grid.add(new HistogramPanel(label2 + " - " + feature.name(), samples2, feature, 20));
         }
 
-        grid.add(new LabelDistributionPanel(rawSamples, "RAW - LABEL"));
-        grid.add(new LabelDistributionPanel(normSamples, "NORM - LABEL"));
+        grid.add(new LabelDistributionPanel(samples1, label1 + " - LABEL"));
+        grid.add(new LabelDistributionPanel(samples2, label2 + " - LABEL"));
 
         JScrollPane scroll = new JScrollPane(grid);
         frame.setContentPane(scroll);
@@ -143,6 +146,7 @@ public class MultiHistogramFromSamples {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
+
 
     /**
      * Pannello Swing che mostra la distribuzione delle etichette (label) in un dataset.
