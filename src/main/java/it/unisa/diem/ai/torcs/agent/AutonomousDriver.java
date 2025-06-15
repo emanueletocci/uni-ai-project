@@ -18,10 +18,6 @@ public class AutonomousDriver extends BaseDriver {
     private final Dataset recoveryDataset;
     private final Dataset driverDataset;
 
-    private Label previousLabel = null;
-    private int sameLabelCount = 0;
-    private static final int SAME_LABEL_LIMIT = 30;
-
 
     Action action = new Action();
 

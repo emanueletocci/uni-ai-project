@@ -1,4 +1,4 @@
-package it.unisa.diem.ai.torcs.utils;
+package it.unisa.diem.ai.torcs.utils.debugging;
 
 import it.unisa.diem.ai.torcs.model.SensorFeature;
 

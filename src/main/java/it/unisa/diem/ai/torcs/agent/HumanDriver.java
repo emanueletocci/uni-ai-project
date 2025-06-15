@@ -7,7 +7,7 @@ import it.unisa.diem.ai.torcs.model.KeyInput;
 
 import it.unisa.diem.ai.torcs.io.ContinuousCharReaderUI;
 import it.unisa.diem.ai.torcs.utils.FeatureNormalizer;
-import it.unisa.diem.ai.torcs.utils.RadarVisualizer;
+import it.unisa.diem.ai.torcs.utils.debugging.RadarVisualizer;
 
 import javax.swing.*;
 

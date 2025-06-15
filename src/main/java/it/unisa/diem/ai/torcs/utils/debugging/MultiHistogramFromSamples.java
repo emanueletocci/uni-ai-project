@@ -1,4 +1,4 @@
-package it.unisa.diem.ai.torcs.utils;
+package it.unisa.diem.ai.torcs.utils.debugging;
 
 import javax.swing.*;
 import java.awt.*;
