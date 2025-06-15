@@ -21,4 +21,5 @@ public class KeyInput {
 
     /** Stato del tasto 'Spazio' (freno premuto = true) */
     public static boolean brake = false;
+
 }
