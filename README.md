@@ -49,7 +49,7 @@ Il sistema è stato testato secondo i seguenti criteri:
 
 Il progetto include un video dimostrativo del funzionamento dell’agente in pista.
 
-👥 Team
+## 👥 Team - Gruppo 03
 
 - Emanuele Tocci - https://github.com/emanueletocci/
 - Alessio Leo - https://github.com/Al3Leo
