@@ -23,7 +23,7 @@ jobs:
       - name: Generate Javadoc
         run: |
           mkdir -p javadoc
-          javadoc -d javadoc -sourcepath src -subpackages main/java/it/unisa/diem/ai/torcs
+          javadoc -d javadoc -sourcepath src/main/java -subpackages it.unisa.diem.ai.torcs
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
