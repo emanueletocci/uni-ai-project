@@ -1,0 +1,42 @@
+name: Generate Javadoc
+
+on:
+  push:
+    branches:
+      - main  # O il tuo branch principale, es. master, develop
+  workflow_dispatch: # Permette di avviare il workflow manualmente dalla UI di GitHub
+
+jobs:
+  build-and-publish-javadoc:
+    runs-on: ubuntu-latest # O 'windows-latest', 'macos-latest' a seconda delle tue esigenze
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Necessario per il push su un branch diverso
+
+    - name: Set up JDK 17 # Specifica la versione di JDK che il tuo progetto usa, se il tuo script ne ha bisogno
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin' # O 'adopt', 'zulu', 'oracle'
+
+    - name: Configure Git for gh-pages
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "github-actions@github.com"
+
+    - name: Make build script executable # Solo per script bash su Linux/macOS
+      run: chmod +x ./build-javadoc.sh # Sostituisci con il percorso e il nome del tuo script
+
+    - name: Run custom Javadoc build script
+      run: ./build-javadoc.sh # Esegui il tuo script personalizzato
+
+    - name: Deploy Javadoc to gh-pages branch
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs/javadoc # La directory dove il tuo script genera la doc
+        publish_branch: gh-pages
+        force_orphan: true
