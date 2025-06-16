@@ -33,7 +33,25 @@ Il progetto è stato sviluppato nell’ambito del contest "Gran Premio MIVIA 202
 ### Compilazione
 
 ```bash
-./src/build.sh
+./build.sh
+```
+
+### Esecuzione client guida manuale
+
+```bash
+./humanRun.sh
+```
+
+### Esecuzione client autonoma mediante regole
+
+```bash
+./simpleRun.sh
+```
+
+### Esecuzione client autonoma mediante KNN
+
+```bash
+./autonomousRun.sh
 ```
 
 ## 📊 Valutazione
