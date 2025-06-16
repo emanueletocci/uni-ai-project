@@ -15,7 +15,7 @@ Il progetto è stato sviluppato nell’ambito del contest "Gran Premio MIVIA 202
 ---
 
 ## 📚 Documentazione
-![Documentazione](docs/docs/Documentazione_Progettuale.pdf)
+![Documentazione](docs/Documentazione_Progettuale.pdf)
 
 
 ## 🧠 Architettura
@@ -23,7 +23,7 @@ Il progetto è stato sviluppato nell’ambito del contest "Gran Premio MIVIA 202
 - **HumanDriver**: modalità di raccolta dati. Registra le coppie osservazione-azione durante la guida manuale.
 - **AutonomousDriver**: modalità autonoma mediante regole. Utilizza un classificatore addestrato per prendere decisioni in tempo reale.
 - **Classificatori**: implementazioni custom di k-NN e KDTree.
-- **Moduli di supporto**: normalizzazione delle feature, visualizzazione radar, parsing socket, utility per logging e istogrammi.
+- **Moduli di supporto**: normalizzazione delle feature, visualizzazione radar,  utility per logging e istogrammi.
 
 
 ---
