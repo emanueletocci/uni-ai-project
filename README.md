@@ -15,8 +15,7 @@ Il progetto è stato sviluppato nell’ambito del contest "Gran Premio MIVIA 202
 ---
 
 ## 📚 Documentazione
-- Bozze: https://docs.google.com/document/d/1LRGNKoem29fzNp8l9Z-NQ9mL3pzFU6O_qdlM0ZAeJyk/edit?tab=t.0
-- Overleaf: https://www.overleaf.com/project/68481aab9fa2cf61e47fd513
+![Documentazione](docs/docs/Documentazione_Progettuale.pdf)
 
 
 ## 🧠 Architettura
