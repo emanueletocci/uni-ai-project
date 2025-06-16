@@ -4,55 +4,51 @@ import it.unisa.diem.ai.torcs.model.Action;
 import it.unisa.diem.ai.torcs.model.SensorModel;
 
 /**
- * Abstract base class for implementing a TORCS car controller.
- * Provides the structure for control logic and race management.
+ * Classe astratta base per l'implementazione di un controller per TORCS.
+ * Fornisce la struttura per la logica di guida e la gestione della gara.
  */
 public abstract class Controller {
 
 	/**
-	 * Enumeration representing the different stages of a race.
+	 * Enumerazione che rappresenta i diversi stadi di una gara.
 	 */
 	public enum Stage {
 
-		/** Warm-up stage */
+		/** Fase di riscaldamento (warm-up) */
 		WARMUP,
 
-		/** Qualifying stage */
+		/** Fase di qualifica */
 		QUALIFYING,
 
-		/** Main race stage */
+		/** Fase di gara principale */
 		RACE,
 
-		/** Unknown or undefined stage */
+		/** Stato sconosciuto o non definito */
 		UNKNOWN;
 
 		/**
-		 * Converts an integer to the corresponding Stage.
+		 * Converte un intero nello stadio corrispondente.
 		 *
-		 * @param value the integer value representing the stage
-		 * @return the corresponding Stage enum
+		 * @param value valore intero che rappresenta lo stadio
+		 * @return lo stadio corrispondente come enumerazione Stage
 		 */
 		public static Stage fromInt(int value) {
-			switch (value) {
-				case 0:
-					return WARMUP;
-				case 1:
-					return QUALIFYING;
-				case 2:
-					return RACE;
-				default:
-					return UNKNOWN;
-			}
+            return switch (value) {
+                case 0 -> WARMUP;
+                case 1 -> QUALIFYING;
+                case 2 -> RACE;
+                default -> UNKNOWN;
+            };
 		}
-	};
+	}
 
-	private Stage stage;
+    private Stage stage;
 	private String trackName;
 
 	/**
-	 * Initializes the range finder angles used for sensing the track.
+	 * Inizializza gli angoli dei sensori di distanza (range finder) utilizzati per percepire la pista.
 	 *
-	 * @return an array of 19 angles from -90 to +90 degrees in steps of 10
+	 * @return un array di 19 angoli da -90 a +90 gradi con passi di 10
 	 */
 	public float[] initAngles() {
 		float[] angles = new float[19];
@@ -62,59 +58,58 @@ public abstract class Controller {
 	}
 
 	/**
-	 * Returns the current race stage.
+	 * Restituisce lo stadio corrente della gara.
 	 *
-	 * @return the current Stage
+	 * @return lo stadio attuale (Stage)
 	 */
 	public Stage getStage() {
 		return stage;
 	}
 
 	/**
-	 * Sets the current race stage.
+	 * Imposta lo stadio corrente della gara.
 	 *
-	 * @param stage the Stage to set
+	 * @param stage lo stadio da impostare
 	 */
 	public void setStage(Stage stage) {
 		this.stage = stage;
 	}
 
 	/**
-	 * Returns the name of the current track.
+	 * Restituisce il nome della pista corrente.
 	 *
-	 * @return the track name
+	 * @return il nome della pista
 	 */
 	public String getTrackName() {
 		return trackName;
 	}
 
 	/**
-	 * Sets the name of the track.
+	 * Imposta il nome della pista.
 	 *
-	 * @param trackName the name of the track
+	 * @param trackName il nome della pista
 	 */
 	public void setTrackName(String trackName) {
 		this.trackName = trackName;
 	}
 
 	/**
-	 * Main control method that must be implemented by subclasses.
-	 * Defines the driving behavior given sensor inputs.
+	 * Metodo principale di controllo da implementare nelle sottoclassi.
+	 * Definisce il comportamento del veicolo dato l'input dei sensori.
 	 *
-	 * @param sensors the current sensor readings
-	 * @return an Action representing the desired driving commands
+	 * @param sensors letture correnti dei sensori
+	 * @return un oggetto Action che rappresenta i comandi di guida desiderati
 	 */
 	public abstract Action control(SensorModel sensors);
 
 	/**
-	 * Called at the beginning of each new trial to reset internal state.
+	 * Chiamato all'inizio di ogni nuova prova per reimpostare lo stato interno.
 	 */
 	public abstract void reset();
 
 	/**
-	 * Called once when the controller is shutting down.
-	 * Used to clean up resources if necessary.
+	 * Chiamato una sola volta alla chiusura del controller.
+	 * Può essere usato per liberare risorse se necessario.
 	 */
 	public abstract void shutdown();
-
 }

@@ -5,16 +5,6 @@ import it.unisa.diem.ai.torcs.model.SensorModel;
 
 public class SimpleDriver extends BaseDriver {
 
-	@Override
-	public void reset() {
-		System.out.println("Restarting the race!");
-	}
-
-	@Override
-	public void shutdown() {
-		System.out.println("Bye bye!");
-	}
-
 	public Action control(SensorModel sensors) {
 		// Controlla se l'auto è attualmente bloccata
 		/**

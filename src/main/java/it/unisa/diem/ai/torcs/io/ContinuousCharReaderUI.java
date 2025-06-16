@@ -7,11 +7,23 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
+/**
+ * Interfaccia grafica minimale per il controllo manuale dell’auto in TORCS.
+ * Permette di utilizzare la tastiera per guidare e di abilitare/disabilitare
+ * la registrazione del dataset tramite checkbox.
+ */
 public class ContinuousCharReaderUI extends JFrame {
+
+    /** Istanza singleton dell’interfaccia. */
     private static ContinuousCharReaderUI instance;
+
+    /** Checkbox per abilitare/disabilitare la registrazione del dataset. */
     private JCheckBox recordDatasetCheckbox;
 
-
+    /**
+     * Costruttore dell’interfaccia.
+     * Inizializza il layout, i listener da tastiera e i controlli grafici.
+     */
     public ContinuousCharReaderUI() {
         instance = this;
         this.setTitle("TORCS Manual Controller");
@@ -19,7 +31,7 @@ public class ContinuousCharReaderUI extends JFrame {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLayout(new FlowLayout());
 
-        // Pannello per input da tastiera (al posto del JTextField)
+        // Pannello per la cattura degli input da tastiera
         JPanel inputPanel = new JPanel();
         inputPanel.setPreferredSize(new Dimension(200, 30));
         inputPanel.setFocusable(true);
@@ -27,12 +39,14 @@ public class ContinuousCharReaderUI extends JFrame {
         inputPanel.setBackground(Color.LIGHT_GRAY);
         this.add(inputPanel);
 
+        // Checkbox per abilitare/disabilitare la registrazione del dataset
         this.recordDatasetCheckbox = new JCheckBox("Registra dataset");
         this.add(this.recordDatasetCheckbox);
-        // Quando si clicca la checkbox, riporta il focus sul pannello di input
+
+        // Ripristina il focus sul pannello di input dopo click sulla checkbox
         recordDatasetCheckbox.addActionListener(e -> inputPanel.requestFocusInWindow());
 
-        // KeyListener con solo getKeyCode()
+        // Listener per gestire i tasti premuti e rilasciati
         inputPanel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -59,18 +73,33 @@ public class ContinuousCharReaderUI extends JFrame {
 
         this.setVisible(true);
 
-        // Forza il focus sul pannello
+        // Forza il focus sul pannello di input all'avvio
         SwingUtilities.invokeLater(inputPanel::requestFocusInWindow);
     }
 
+    /**
+     * Restituisce l’istanza corrente dell’interfaccia grafica.
+     *
+     * @return istanza di {@code ContinuousCharReaderUI}
+     */
     public static ContinuousCharReaderUI getInstance() {
         return instance;
     }
 
+    /**
+     * Verifica se la registrazione del dataset è attiva (checkbox selezionata).
+     *
+     * @return {@code true} se la registrazione è abilitata, altrimenti {@code false}
+     */
     public boolean isDatasetRecordingEnabled() {
         return recordDatasetCheckbox != null && recordDatasetCheckbox.isSelected();
     }
 
+    /**
+     * Avvia l’interfaccia come applicazione standalone.
+     *
+     * @param args argomenti da linea di comando (non utilizzati)
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(ContinuousCharReaderUI::new);
     }

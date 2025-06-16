@@ -10,44 +10,67 @@ import it.unisa.diem.ai.torcs.model.SensorModel;
  */
 public abstract class BaseDriver extends Controller {
 
+    /** Soglie RPM per il passaggio alla marcia superiore. */
     final int[] gearUp = { 5000, 6000, 6000, 6500, 7000, 0 };
+
+    /** Soglie RPM per la scalata di marcia. */
     final int[] gearDown = { 0, 2500, 3000, 3000, 3500, 3500 };
 
+    /** Numero di cicli per rilevare una situazione di blocco. */
     final int stuckTime = 100;
-    final float stuckAngle = (float) 0.523598775; // PI/6
 
+    /** Angolo soglia per considerare l'auto bloccata. */
+    final float stuckAngle = 0.523598775f; // PI/6
+
+    /** Distanza oltre la quale viene raggiunta la velocità massima. */
     final float maxSpeedDist = 70;
+
+    /** Velocità massima del veicolo. */
     final float maxSpeed = 150;
-    final float sin5 = (float) 0.08716;
-    final float cos5 = (float) 0.99619;
 
-    final float steerLock = (float) 0.785398;
-    final float steerSensitivityOffset = (float) 80.0;
-    final float wheelSensitivityCoeff = 1;
+    final float sin5 = 0.08716f;
+    final float cos5 = 0.99619f;
 
-    final float[] wheelRadius = { (float) 0.3179, (float) 0.3179, (float) 0.3276, (float) 0.3276 };
-    final float absSlip = (float) 2.0;
-    final float absRange = (float) 3.0;
-    final float absMinSpeed = (float) 3.0;
+    /** Massimo angolo di sterzata. */
+    final float steerLock = 0.785398f;
 
-    final float clutchMax = (float) 0.5;
-    final float clutchDelta = (float) 0.05;
-    final float clutchRange = (float) 0.82;
-    final float clutchDeltaTime = (float) 0.02;
-    final float clutchDeltaRaced = 10;
-    final float clutchDec = (float) 0.01;
-    final float clutchMaxModifier = (float) 1.3;
-    final float clutchMaxTime = (float) 1.5;
+    /** Offset di sensibilità per la sterzata. */
+    final float steerSensitivityOffset = 80.0f;
 
+    /** Coefficiente di sensibilità del volante. */
+    final float wheelSensitivityCoeff = 1f;
+
+    /** Raggio delle ruote. */
+    final float[] wheelRadius = { 0.3179f, 0.3179f, 0.3276f, 0.3276f };
+
+    /** Parametri ABS: slip, range e velocità minima. */
+    final float absSlip = 2.0f;
+    final float absRange = 3.0f;
+    final float absMinSpeed = 3.0f;
+
+    /** Parametri per la gestione della frizione. */
+    final float clutchMax = 0.5f;
+    final float clutchDelta = 0.05f;
+    final float clutchRange = 0.82f;
+    final float clutchDeltaTime = 0.02f;
+    final float clutchDeltaRaced = 10f;
+    final float clutchDec = 0.01f;
+    final float clutchMaxModifier = 1.3f;
+    final float clutchMaxTime = 1.5f;
+
+    /** Stato del blocco e valore corrente della frizione. */
     int stuck = 0;
     float clutch = 0;
 
+    /** Costruttore di default. */
     public BaseDriver() {
         super();
     }
 
     /**
-     * Calcola la marcia da usare in base agli RPM attuali.
+     * Calcola la marcia da utilizzare in base agli RPM.
+     * @param sensors Modello dei sensori del veicolo.
+     * @return Marcia consigliata.
      */
     int getGear(SensorModel sensors) {
         int gear = sensors.getGear();
@@ -59,18 +82,22 @@ public abstract class BaseDriver extends Controller {
     }
 
     /**
-     * Calcola l'angolo di sterzata in base all'angolo e alla posizione sulla pista.
+     * Calcola l'angolo di sterzata ottimale.
+     * @param sensors Modello dei sensori del veicolo.
+     * @return Valore normalizzato di sterzata.
      */
     float getSteer(SensorModel sensors) {
         float targetAngle = (float) (sensors.getAngleToTrackAxis() - sensors.getTrackPosition() * 0.5);
         if (sensors.getSpeed() > steerSensitivityOffset)
             return (float) (targetAngle / (steerLock * (sensors.getSpeed() - steerSensitivityOffset) * wheelSensitivityCoeff));
         else
-            return (targetAngle) / steerLock;
+            return targetAngle / steerLock;
     }
 
     /**
-     * Calcola l'accelerazione target in base ai sensori di bordo pista e velocità.
+     * Calcola il livello di accelerazione desiderato.
+     * @param sensors Modello dei sensori del veicolo.
+     * @return Accelerazione normalizzata.
      */
     float getAccel(SensorModel sensors) {
         if (sensors.getTrackPosition() > -1 && sensors.getTrackPosition() < 1) {
@@ -83,17 +110,21 @@ public abstract class BaseDriver extends Controller {
                 targetSpeed = maxSpeed;
             else {
                 float h = sensorsensor * sin5;
-                float b = (rxSensor > sxSensor ? rxSensor : sxSensor) - sensorsensor * cos5;
+                float b = (Math.max(rxSensor, sxSensor)) - sensorsensor * cos5;
                 float sinAngle = b * b / (h * h + b * b);
                 targetSpeed = maxSpeed * (sensorsensor * sinAngle / maxSpeedDist);
             }
             return (float) (2 / (1 + Math.exp(sensors.getSpeed() - targetSpeed)) - 1);
-        } else
-            return (float) 0.3;
+        } else {
+            return 0.3f;
+        }
     }
 
     /**
-     * Gestione automatica della frizione in base a tempo di gara e distanza percorsa.
+     * Gestisce automaticamente la frizione in fase di partenza.
+     * @param sensors Modello dei sensori.
+     * @param clutch Valore corrente della frizione.
+     * @return Nuovo valore di frizione.
      */
     float clutching(SensorModel sensors, float clutch) {
         float maxClutch = clutchMax;
@@ -112,15 +143,19 @@ public abstract class BaseDriver extends Controller {
             clutch = Math.min(maxClutch, clutch);
             if (clutch != maxClutch) {
                 clutch -= (float) delta;
-                clutch = Math.max((float) 0.0, clutch);
-            } else
+                clutch = Math.max(0.0f, clutch);
+            } else {
                 clutch -= clutchDec;
+            }
         }
         return clutch;
     }
 
     /**
-     * Simula un sistema ABS per prevenire il bloccaggio delle ruote durante la frenata.
+     * Applica un filtro ABS per evitare il bloccaggio delle ruote.
+     * @param sensors Modello dei sensori.
+     * @param brake Valore corrente di frenata.
+     * @return Valore corretto con ABS.
      */
     float filterABS(SensorModel sensors, float brake) {
         float speed = (float) (sensors.getSpeed() / 3.6);
@@ -138,7 +173,9 @@ public abstract class BaseDriver extends Controller {
     }
 
     /**
-     * Azione completa di accelerazione.
+     * Imposta l'accelerazione completa.
+     * @param action Azione da modificare.
+     * @param sensors Modello dei sensori.
      */
     void accelera(Action action, SensorModel sensors) {
         action.accelerate = 1.0;
@@ -149,7 +186,9 @@ public abstract class BaseDriver extends Controller {
     }
 
     /**
-     * Azione completa di frenata.
+     * Imposta la frenata completa.
+     * @param action Azione da modificare.
+     * @param sensors Modello dei sensori.
      */
     void frena(Action action, SensorModel sensors) {
         action.brake = filterABS(sensors, 1f);
@@ -159,7 +198,9 @@ public abstract class BaseDriver extends Controller {
     }
 
     /**
-     * Azione di retromarcia.
+     * Imposta la retromarcia.
+     * @param action Azione da modificare.
+     * @param sensors Modello dei sensori.
      */
     void retromarcia(Action action, SensorModel sensors) {
         action.gear = -1;
@@ -169,7 +210,9 @@ public abstract class BaseDriver extends Controller {
     }
 
     /**
-     * Azione di sterzata verso sinistra.
+     * Sterza verso sinistra.
+     * @param action Azione da modificare.
+     * @param sensors Modello dei sensori.
      */
     void giraSinistra(Action action, SensorModel sensors) {
         if (sensors.getSpeed() < 15)
@@ -181,7 +224,9 @@ public abstract class BaseDriver extends Controller {
     }
 
     /**
-     * Azione di sterzata verso destra.
+     * Sterza verso destra.
+     * @param action Azione da modificare.
+     * @param sensors Modello dei sensori.
      */
     void giraDestra(Action action, SensorModel sensors) {
         if (sensors.getSpeed() < 15)
@@ -193,7 +238,9 @@ public abstract class BaseDriver extends Controller {
     }
 
     /**
-     * Azione di decelerazione controllata (fallback).
+     * Decelerazione controllata.
+     * @param action Azione da modificare.
+     * @param sensors Modello dei sensori.
      */
     void decelera(Action action, SensorModel sensors) {
         action.steering = 0.0f;
@@ -204,8 +251,8 @@ public abstract class BaseDriver extends Controller {
     }
 
     /**
-     * Inizializza l'array degli angoli dei sensori di bordo pista in gradi.
-     * @return array di 19 angoli in gradi da -90 a 90
+     * Inizializza l'array di angoli dei sensori di bordo pista.
+     * @return Array di 19 angoli da -90° a 90°.
      */
     @Override
     public float[] initAngles() {
@@ -223,7 +270,7 @@ public abstract class BaseDriver extends Controller {
     }
 
     /**
-     * Stampa un messaggio al reset della simulazione.
+     * Messaggio al reset della simulazione.
      */
     @Override
     public void reset() {
@@ -231,7 +278,7 @@ public abstract class BaseDriver extends Controller {
     }
 
     /**
-     * Stampa un messaggio alla chiusura della simulazione.
+     * Messaggio alla chiusura della simulazione.
      */
     @Override
     public void shutdown() {
